@@ -10,6 +10,8 @@
     ["cry", "Crypto"], ["vr", "VR et AR"], ["arc", "Arcade"], ["soc", "Contenu et réseaux"], ["app", "Design visuel"]
   ];
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const dustPalette = ["116,222,239", "182,159,255", "255,200,137", "225,244,255", "93,171,245"];
+  const dust = Array.from({ length: 72 }, (_, index) => ({ u: Math.random() * 2 - 1, v: Math.random() * 2 - 1, phase: Math.random() * TAU, size: 0.35 + Math.random() * 0.9, hue: index % 5 }));
   const state = { categories: [], tasks: [], settings: { side: "right", opacity: 0.82, motion: "measured" }, active: false, lastFrame: 0, start: performance.now() };
   let ratio = 1;
   let width = 0;
@@ -78,12 +80,49 @@
       return { id, label, color, angle, depth, x: px, y: py, count: belonging.length, priority: Math.max(0, ...belonging.map((task) => task.priority || 0)) };
     });
 
+    drawNebula(cx, cy, rx, ry, s, t, motion);
     drawHalo(cx, cy, rx, ry, s, t, motion);
     drawAxis(L, s);
     drawLinks(categories, cx, cy, t, s, motion);
     drawCore(cx, cy, s, t, activeCount, openCount, progress, motion);
     categories.slice().sort((a, b) => a.depth - b.depth).forEach((node) => drawNode(node, s, t, motion));
     drawTelemetry(L, s, openCount, activeCount, progress, elapsed);
+  }
+
+  function drawNebula(cx, cy, rx, ry, s, t, motion) {
+    const clouds = [
+      { x: -0.38, y: -0.27, rx: 0.76, ry: 0.64, angle: -0.48, rgb: [37, 105, 232], phase: 0.5 },
+      { x: 0.36, y: 0.34, rx: 0.83, ry: 0.53, angle: 0.38, rgb: [27, 180, 189], phase: 2.2 },
+      { x: 0.55, y: -0.44, rx: 0.65, ry: 0.65, angle: 0.62, rgb: [148, 67, 215], phase: 4.1 },
+      { x: -0.14, y: 0.52, rx: 0.59, ry: 0.45, angle: -0.28, rgb: [207, 109, 76], phase: 5.3 }
+    ];
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    clouds.forEach((cloud) => {
+      const x = cx + cloud.x * rx + Math.sin(t * 0.035 + cloud.phase) * rx * 0.018 * motion;
+      const y = cy + cloud.y * ry + Math.cos(t * 0.027 + cloud.phase) * ry * 0.025 * motion;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(cloud.angle + Math.sin(t * 0.018 + cloud.phase) * 0.025 * motion);
+      ctx.scale(rx * cloud.rx, ry * cloud.ry);
+      const rgb = cloud.rgb.join(",");
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      glow.addColorStop(0, `rgba(${rgb},${alpha(0.14)})`);
+      glow.addColorStop(0.32, `rgba(${rgb},${alpha(0.085)})`);
+      glow.addColorStop(0.72, `rgba(${rgb},${alpha(0.025)})`);
+      glow.addColorStop(1, `rgba(${rgb},0)`);
+      ctx.fillStyle = glow;
+      ctx.fillRect(-1, -1, 2, 2);
+      ctx.restore();
+    });
+    dust.forEach((point) => {
+      if (point.u * point.u + point.v * point.v > 1) return;
+      const twinkle = motion ? 0.5 + 0.5 * Math.sin(t * 0.85 + point.phase) : 0.55;
+      const x = cx + point.u * rx * 0.84, y = cy + point.v * ry * 0.82;
+      ctx.fillStyle = `rgba(${dustPalette[point.hue]},${alpha((0.045 + twinkle * 0.11) * motion + 0.035)})`;
+      ctx.beginPath(); ctx.arc(x, y, point.size * s * (0.7 + twinkle * 0.35), 0, TAU); ctx.fill();
+    });
+    ctx.restore();
   }
 
   function drawHalo(cx, cy, rx, ry, s, t, motion) {
@@ -99,6 +138,15 @@
       ctx.setLineDash(index === 1 ? [2 * s, 10 * s] : []);
       ctx.stroke();
     }
+    ctx.setLineDash([1.5 * s, 8 * s]);
+    ctx.lineDashOffset = -t * 0.12 * motion;
+    ctx.strokeStyle = `rgba(110,207,221,${alpha(0.15)})`;
+    ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.ellipse(0, 0, rx * 0.86, ry * 0.84, 0, 0, TAU); ctx.stroke();
+    ctx.setLineDash([2 * s, 15 * s]);
+    ctx.lineDashOffset = t * 0.08 * motion;
+    ctx.strokeStyle = `rgba(194,137,243,${alpha(0.12)})`;
+    ctx.beginPath(); ctx.ellipse(0, 0, rx * 1.12, ry * 1.12, 0, 0, TAU); ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
   }
@@ -143,13 +191,16 @@
   function drawCore(cx, cy, s, t, active, open, progress, motion) {
     const r = 33 * s;
     ctx.save();
+    ctx.globalCompositeOperation = "screen";
     ctx.shadowColor = "rgba(104,207,210,.24)";
-    ctx.shadowBlur = 24 * s;
-    const center = ctx.createRadialGradient(cx - 5 * s, cy - 8 * s, 2 * s, cx, cy, r * 1.12);
-    center.addColorStop(0, `rgba(189,228,226,${alpha(0.15)})`);
-    center.addColorStop(0.55, `rgba(67,119,139,${alpha(0.09)})`);
+    ctx.shadowBlur = 38 * s;
+    const center = ctx.createRadialGradient(cx - 5 * s, cy - 8 * s, 2 * s, cx, cy, r * 2.7);
+    center.addColorStop(0, `rgba(255,220,167,${alpha(0.27)})`);
+    center.addColorStop(0.24, `rgba(92,211,228,${alpha(0.17)})`);
+    center.addColorStop(0.58, `rgba(106,91,203,${alpha(0.07)})`);
     center.addColorStop(1, "rgba(45,72,94,0)");
     ctx.fillStyle = center; ctx.beginPath(); ctx.arc(cx, cy, r * 1.12, 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
     ctx.shadowBlur = 0;
     ctx.strokeStyle = `rgba(191,229,225,${alpha(0.78)})`;
     ctx.lineWidth = 1.05;
@@ -175,15 +226,21 @@
     const radius = (4.2 + node.priority * 0.6) * scale;
     ctx.save();
     ctx.globalAlpha = 0.4 + node.depth * 0.6;
-    ctx.shadowColor = node.color;
-    ctx.shadowBlur = (node.count ? 12 : 5) * scale;
-    ctx.fillStyle = node.color;
-    ctx.beginPath(); ctx.arc(node.x, node.y, radius * (1 + Math.sin(t * 0.9 + node.angle) * 0.04 * motion), 0, TAU); ctx.fill();
+    const pulse = 1 + Math.sin(t * 0.9 + node.angle) * 0.04 * motion;
+    const halo = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * (node.count ? 5 : 3.2));
+    halo.addColorStop(0, `${node.color}66`); halo.addColorStop(1, `${node.color}00`);
+    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(node.x, node.y, radius * (node.count ? 5 : 3.2), 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(node.x, node.y); ctx.rotate(node.angle * 0.42);
+    ctx.beginPath(); ctx.ellipse(0, 0, radius * 2.05, radius * 0.7, 0, 0, TAU);
+    ctx.strokeStyle = `${node.color}a8`; ctx.lineWidth = 0.85 * scale; ctx.stroke(); ctx.restore();
+    ctx.shadowColor = node.color; ctx.shadowBlur = (node.count ? 14 : 7) * scale;
+    const sphere = ctx.createRadialGradient(node.x - radius * 0.38, node.y - radius * 0.42, 0.5, node.x, node.y, radius * 1.45);
+    sphere.addColorStop(0, "#ffffff"); sphere.addColorStop(0.22, node.color); sphere.addColorStop(0.72, node.color); sphere.addColorStop(1, "rgba(3,12,25,.88)");
+    ctx.fillStyle = sphere;
+    ctx.beginPath(); ctx.arc(node.x, node.y, radius * pulse, 0, TAU); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = `${node.color}aa`;
-    ctx.lineWidth = 0.8;
-    ctx.beginPath(); ctx.arc(node.x, node.y, radius + 5 * scale + node.count * 0.35 * scale, 0, TAU); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(node.x - 10 * scale, node.y); ctx.lineTo(node.x - 6.5 * scale, node.y); ctx.moveTo(node.x + 6.5 * scale, node.y); ctx.lineTo(node.x + 10 * scale, node.y); ctx.stroke();
+    ctx.strokeStyle = `${node.color}7d`; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(node.x, node.y, radius + 5 * scale + node.count * 0.35 * scale, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0.025, Math.min(1, node.count / 5))); ctx.stroke();
     ctx.font = `500 ${10 * scale}px Bahnschrift, 'Segoe UI', sans-serif`;
     ctx.fillStyle = `rgba(220,236,238,${alpha(0.7 + node.depth * 0.28)})`;
     ctx.textBaseline = "middle";

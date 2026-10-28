@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - desktop/orchestrator-layer-prototype-2026-10-28
+      - main
     paths:
       - 'desktop/**'
       - '.github/workflows/desktop-widget.yml'
@@ -40,3 +41,36 @@ jobs:
           path: desktop/dist/*.exe
           if-no-files-found: error
           retention-days: 30
+
+  publish-release:
+    if: github.ref == 'refs/heads/main'
+    needs: windows-package
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Get source
+        uses: actions/checkout@v4
+
+      - name: Download installer
+        uses: actions/download-artifact@v4
+        with:
+          name: QG-Desktop-Windows
+          path: release
+
+      - name: Publish permanent Windows download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $version = node -p "require('./desktop/package.json').version"
+          $tag = "qg-desktop-v$version"
+          $installer = Get-ChildItem "release/QG-Desktop-$version-*.exe" | Select-Object -First 1
+          if (-not $installer) { throw "Installateur Windows introuvable pour la version $version." }
+          & gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            & gh release upload $tag $installer.FullName --repo $env:GITHUB_REPOSITORY --clobber
+          } else {
+            & gh release create $tag $installer.FullName --repo $env:GITHUB_REPOSITORY --title "QG Desktop $version" --notes-file desktop/RELEASE_NOTES.md --latest
+          }
+          if ($LASTEXITCODE -ne 0) { throw "Publication de la version Windows échouée." }

@@ -11,6 +11,8 @@ Cockpit spatial animé, servi comme site statique par GitHub Pages.
 
 Le site fonctionne sans compilation. Le service worker vérifie le réseau avant d’utiliser sa copie hors ligne pour que les changements publiés soient chargés rapidement.
 
-## Prototype Windows séparé
+## Application Windows
 
-La branche `desktop/orchestrator-layer-prototype-2026-10-28` contient un prototype d’application de bureau à deux couches : une scène transparente placée derrière les icônes Windows et un plan de travail qui s’ouvre à la demande. Le site publié reste indépendant. Voir [desktop/README.md](desktop/README.md) pour l’architecture, la reprise des tâches et le paquet Windows.
+**[Télécharger QG Desktop pour Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest)** — la scène transparente est placée derrière les icônes; elle ne bloque pas leurs clics. `Ctrl+Alt+Espace` ouvre le plan de travail. Le mouvement et l’affichage du champ se règlent depuis les préférences ou l’icône QG dans la zone de notification.
+
+L’application et le site gardent des sauvegardes séparées. Les tâches se déplacent par export et import JSON; le navigateur n’est jamais lu directement par l’application.
