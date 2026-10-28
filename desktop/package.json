@@ -2,19 +2,19 @@
   "name": "qg-desktop-companion",
   "version": "0.1.0",
   "private": true,
-  "description": "A two-layer Windows desktop companion for QG — a transparent desktop field and an on-demand task surface.",
+  "description": "QG Desktop — cockpit spatial à deux couches pour Windows.",
+  "author": "CEOMELYXJA",
   "main": "src/main.cjs",
+  "postinstall": "electron-builder install-app-deps",
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/generate-icons.cjs",
-    "rebuild-native": "electron-rebuild -f -w desktop-host",
-    "package": "npm run icons && npm run rebuild-native && electron-builder --win nsis zip"
+    "package": "npm run icons && electron-builder --publish never --win nsis zip"
   },
   "dependencies": {
     "desktop-host": "file:./native"
   },
   "devDependencies": {
-    "@electron/rebuild": "4.2.1",
     "electron": "45.1.0",
     "electron-builder": "26.18.0"
   },
@@ -25,7 +25,7 @@
     "directories": { "output": "dist" },
     "files": ["src/**/*", "assets/**/*", "package.json"],
     "asar": true,
-    "asarUnpack": ["node_modules/desktop-host/build/Release/*.node"],
+    "asarUnpack": ["**/*.node"],
     "win": { "icon": "assets/qg.ico", "target": ["nsis", "zip"], "requestedExecutionLevel": "asInvoker" },
     "nsis": {
       "oneClick": false,

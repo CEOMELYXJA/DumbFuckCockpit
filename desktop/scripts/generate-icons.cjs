@@ -6,7 +6,8 @@ const zlib = require("node:zlib");
 
 const output = path.join(__dirname, "..", "assets");
 fs.mkdirSync(output, { recursive: true });
-const size = 64;
+const size = 256;
+const scale = size / 64;
 const rgba = Buffer.alloc(size * size * 4);
 const glyphs = {
   Q: ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
@@ -23,7 +24,7 @@ function coverage(fn, x, y) {
   let total = 0;
   const samples = 4;
   for (let sy = 0; sy < samples; sy++) for (let sx = 0; sx < samples; sx++) {
-    if (fn(x + (sx + 0.5) / samples, y + (sy + 0.5) / samples)) total++;
+    if (fn((x + (sx + 0.5) / samples) / scale, (y + (sy + 0.5) / samples) / scale)) total++;
   }
   return total / (samples * samples);
 }
@@ -41,7 +42,7 @@ function paint(x, y, color, amount) {
 }
 
 for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-  const px = x + 0.5, py = y + 0.5;
+  const px = (x + 0.5) / scale, py = (y + 0.5) / scale;
   const outer = roundedDistance(px, py, 4, 4, 60, 60, 15);
   const fill = coverage((sx, sy) => roundedDistance(sx, sy, 4, 4, 60, 60, 15) <= 0, x, y);
   paint(x, y, [11, 20, 34], fill);
@@ -90,6 +91,6 @@ fs.writeFileSync(path.join(output, "tray.png"), png);
 
 const iconHeader = Buffer.alloc(22);
 iconHeader.writeUInt16LE(0, 0); iconHeader.writeUInt16LE(1, 2); iconHeader.writeUInt16LE(1, 4);
-iconHeader[6] = size; iconHeader[7] = size; iconHeader[8] = 0; iconHeader[9] = 0;
+iconHeader[6] = size === 256 ? 0 : size; iconHeader[7] = size === 256 ? 0 : size; iconHeader[8] = 0; iconHeader[9] = 0;
 iconHeader.writeUInt16LE(1, 10); iconHeader.writeUInt16LE(32, 12); iconHeader.writeUInt32LE(png.length, 14); iconHeader.writeUInt32LE(22, 18);
 fs.writeFileSync(path.join(output, "qg.ico"), Buffer.concat([iconHeader, png]));

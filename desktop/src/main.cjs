@@ -1,20 +1,20 @@
 "use strict";
 
-const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, dialog, screen, shell, powerMonitor, nativeImage } = require("electron");
+const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, dialog, screen, shell, nativeImage } = require("electron");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const { spawn } = require("node:child_process");
 
-if (process.platform !== "win32") {
+if (process.argv.includes("--qg-ambient-host")) {
+  require("./ambient.cjs");
+} else if (process.platform !== "win32") {
   app.whenReady().then(() => dialog.showErrorBox("QG Desktop", "Le prototype du widget de bureau cible Windows 10 et Windows 11."));
 } else {
   const singleInstance = app.requestSingleInstanceLock();
   if (!singleInstance) app.quit();
   else {
   app.on("second-instance", () => { if (appReady) openPanel(); else secondInstancePending = true; });
-  let host = null;
-  try { host = require("desktop-host"); }
-  catch (error) { console.error("The native Windows desktop layer could not load:", error.message); }
   const CATEGORIES = [
     ["tat", "Boutique", "#fa759e"], ["ate", "Atelier 3D", "#9bd779"], ["dro", "Studio drone", "#58c8dc"],
     ["gar", "Garage trottinette", "#e9ae62"], ["lab", "Labo code", "#aa9df2"], ["ban", "Banque", "#e9d274"],
@@ -28,15 +28,13 @@ if (process.platform !== "win32") {
   const MAX_TASKS = 500;
   let tray = null;
   let panel = null;
-  let scenes = [];
-  let lastDesktopState = null;
-  let explorerRetry = null;
+  let ambientProcess = null;
+  let ambientRestartTimer = null;
   let tasksPath = "";
   let settingsPath = "";
   let tasks = [];
-  let settings = { side: "right", opacity: 0.82, motion: "measured", startWithWindows: false, panelBounds: null };
+  let settings = { side: "right", opacity: 0.82, motion: "measured", fieldEnabled: true, startWithWindows: false, panelBounds: null };
   let quitting = false;
-  let lastHostRefresh = 0;
   let appReady = false;
   let secondInstancePending = false;
   let tasksRecoveryNeeded = false;
@@ -84,6 +82,7 @@ if (process.platform !== "win32") {
       side: next.side === "left" ? "left" : "right",
       opacity: Math.max(0.62, Math.min(0.96, Number(next.opacity) || 0.82)),
       motion: next.motion === "reduced" ? "reduced" : "measured",
+      fieldEnabled: next.fieldEnabled !== false,
       startWithWindows: Boolean(next.startWithWindows),
       panelBounds: validBounds
     };
@@ -113,75 +112,65 @@ if (process.platform !== "win32") {
     catch (error) { if (error && error.code === "ENOENT") return fallback; throw error; }
   }
 
-  function readDesktopHosts() {
-    if (!host) return [];
-    try { return host.enumerateDesktopHosts(); }
-    catch (error) { console.error("Desktop host enumeration failed:", error.message); return []; }
+  function ambientSnapshot() {
+    return { categories: CATEGORIES, tasks: publicTasks(), settings };
   }
 
-  function monitorBounds(display) {
-    const scale = display.scaleFactor || 1;
-    return { x: display.bounds.x, y: display.bounds.y, width: display.bounds.width, height: display.bounds.height, scale };
+  function sendAmbient(type, payload) {
+    if (!ambientProcess || !ambientProcess.connected) return false;
+    try { ambientProcess.send({ type, payload }); return true; }
+    catch (error) { console.error("Ambient host message failed:", error.message); return false; }
   }
 
-  function chooseHost(hosts, display) {
-    const wanted = monitorBounds(display);
-    let best = null;
-    let bestScore = -1;
-    for (const candidate of hosts) {
-      const r = candidate.bounds;
-      const left = Math.max(wanted.x, r.x / wanted.scale);
-      const top = Math.max(wanted.y, r.y / wanted.scale);
-      const right = Math.min(wanted.x + wanted.width, (r.x + r.width) / wanted.scale);
-      const bottom = Math.min(wanted.y + wanted.height, (r.y + r.height) / wanted.scale);
-      const score = Math.max(0, right - left) * Math.max(0, bottom - top);
-      if (score > bestScore) { best = candidate; bestScore = score; }
+  function requestAmbientRebuild() {
+    if (!sendAmbient("rebuild")) startAmbientHost();
+  }
+
+  function startAmbientHost() {
+    if (quitting || !settings.fieldEnabled || ambientRestartTimer) return;
+    if (ambientProcess && ambientProcess.exitCode === null && !ambientProcess.killed) {
+      if (ambientProcess.connected) return;
+      ambientProcess.kill();
+      ambientProcess = null;
     }
-    return best;
-  }
-
-  function createScene(display, desktopHost) {
-    const bounds = display.bounds;
-    const win = new BrowserWindow({
-      x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
-      show: false, frame: false, transparent: true, backgroundColor: "#00000000",
-      resizable: false, movable: false, minimizable: false, maximizable: false,
-      fullscreenable: false, focusable: false, skipTaskbar: true, hasShadow: false,
-      paintWhenInitiallyHidden: false,
-      webPreferences: {
-        preload: path.join(__dirname, "scene-preload.cjs"), contextIsolation: true,
-        nodeIntegration: false, sandbox: true, backgroundThrottling: false
-      }
-    });
-    win.setIgnoreMouseEvents(true);
-    win.setFocusable(false);
-    win.loadFile(path.join(__dirname, "scene.html"));
-    win.webContents.once("did-finish-load", () => {
-      try {
-        if (!host) throw new Error("Le module Windows de la couche arrière n’est pas disponible.");
-        host.attachToDesktop(win.getNativeWindowHandle(), desktopHost.handle, monitorBounds(display));
-        win.showInactive();
-        win.webContents.send("qg:ambient-active", false);
-        win.webContents.send("qg:scene-state", { categories: CATEGORIES, tasks: publicTasks(), settings });
-      } catch (error) {
-        console.error("Desktop scene attachment failed:", error.message);
-        win.destroy();
-      }
-    });
-    win.on("closed", () => { scenes = scenes.filter((item) => item !== win); });
-    scenes.push(win);
-  }
-
-  function rebuildScenes() {
-    for (const win of scenes) if (!win.isDestroyed()) win.destroy();
-    scenes = [];
-    const hosts = readDesktopHosts();
-    if (!hosts.length) { showShellNotice("Le fond Windows n’a pas pu être détecté; le widget reste masqué pour protéger vos icônes."); return; }
-    for (const display of screen.getAllDisplays()) {
-      const desktopHost = chooseHost(hosts, display);
-      if (desktopHost) createScene(display, desktopHost);
+    const profile = path.join(app.getPath("temp"), `QG-Desktop-Ambient-${process.pid}`);
+    const args = app.isPackaged ? ["--qg-ambient-host"] : [path.resolve(__dirname, ".."), "--qg-ambient-host"];
+    let child;
+    try {
+      child = spawn(process.execPath, args, {
+        windowsHide: true,
+        stdio: ["ignore", "ignore", "ignore", "ipc"],
+        env: { ...process.env, QG_AMBIENT_PROFILE: profile }
+      });
+    } catch (error) {
+      showShellNotice(`La couche de fond n’a pas démarré : ${error.message}`);
+      return;
     }
-    if (!scenes.length) showShellNotice("Aucune surface de fond Windows compatible n’a été trouvée.");
+    ambientProcess = child;
+    child.on("message", (message) => {
+      if (!message || typeof message !== "object") return;
+      if (message.type === "shell-unavailable" || message.type === "attach-error" || message.type === "shell-error") showShellNotice(message.message || "La couche de fond Windows reste masquée pour protéger vos icônes.");
+      if (message.type === "ready") sendAmbient("snapshot", ambientSnapshot());
+    });
+    child.on("error", (error) => showShellNotice(`La couche de fond s’est arrêtée : ${error.message}`));
+    child.on("close", () => {
+      if (ambientProcess === child) ambientProcess = null;
+      if (quitting || !settings.fieldEnabled) return;
+      showShellNotice("La couche de fond redémarre; le plan de travail reste disponible.");
+      ambientRestartTimer = setTimeout(() => { ambientRestartTimer = null; startAmbientHost(); }, 2200);
+      ambientRestartTimer.unref?.();
+    });
+    child.once("spawn", () => sendAmbient("snapshot", ambientSnapshot()));
+  }
+
+  function stopAmbientHost() {
+    if (!ambientProcess) return;
+    const child = ambientProcess;
+    ambientProcess = null;
+    if (child.connected) {
+      try { child.send({ type: "shutdown" }); child.disconnect(); }
+      catch (_) { child.kill(); }
+    } else child.kill();
   }
 
   function showShellNotice(body) {
@@ -208,7 +197,7 @@ if (process.platform !== "win32") {
 
   function syncViews() {
     if (panel && !panel.isDestroyed()) panel.webContents.send("qg:tasks:snapshot", { tasks: publicTasks(), summary: taskSummary(), blocked: tasksRecoveryNeeded });
-    for (const scene of scenes) if (!scene.isDestroyed()) scene.webContents.send("qg:scene-state", { categories: CATEGORIES, tasks: publicTasks(), settings });
+    sendAmbient("snapshot", ambientSnapshot());
   }
 
   function placePanel() {
@@ -303,6 +292,7 @@ if (process.platform !== "win32") {
       app.setLoginItemSettings({ openAtLogin: settings.startWithWindows });
       await queueSettingsWrite();
       syncViews();
+      if (settings.fieldEnabled) startAmbientHost(); else stopAmbientHost();
       return settings;
     });
     ipcMain.handle("qg:site:open", () => shell.openExternal("https://ceomelyxja.github.io/DumbFuckCockpit/"));
@@ -312,7 +302,8 @@ if (process.platform !== "win32") {
   function trayMenu() {
     const menu = Menu.buildFromTemplate([
       { label: "Ouvrir le plan de travail", click: openPanel },
-      { label: "Actualiser la couche du bureau", click: rebuildScenes },
+      { label: settings.fieldEnabled ? "Masquer la scène du bureau" : "Afficher la scène du bureau", click: toggleAmbientField },
+      { label: "Actualiser la couche du bureau", enabled: settings.fieldEnabled, click: requestAmbientRebuild },
       { type: "separator" },
       { label: "Ouvrir le cockpit web", click: () => shell.openExternal("https://ceomelyxja.github.io/DumbFuckCockpit/") },
       { type: "separator" },
@@ -321,37 +312,19 @@ if (process.platform !== "win32") {
     if (tray) tray.setContextMenu(menu);
   }
 
+  async function toggleAmbientField() {
+    settings.fieldEnabled = !settings.fieldEnabled;
+    await queueSettingsWrite();
+    trayMenu();
+    syncViews();
+    if (settings.fieldEnabled) startAmbientHost(); else stopAmbientHost();
+  }
+
   function createTray() {
     tray = new Tray(nativeImage.createFromPath(path.join(__dirname, "../assets/tray.png")));
     tray.setToolTip("QG Desktop · Ctrl+Alt+Space");
     tray.on("double-click", openPanel);
     trayMenu();
-  }
-
-  function updateDesktopActivity() {
-    let active = false;
-    try { active = Boolean(host && host.isDesktopForeground()); } catch (_) {}
-    if (lastDesktopState !== active) {
-      lastDesktopState = active;
-      for (const scene of scenes) if (!scene.isDestroyed()) scene.webContents.send("qg:ambient-active", active);
-    }
-  }
-
-  function maintainShell() {
-    const now = Date.now();
-    if (now - lastHostRefresh > 8000) {
-      lastHostRefresh = now;
-      const hosts = readDesktopHosts();
-      const current = new Set(hosts.map((entry) => entry.handle));
-      const shouldRebuild = scenes.some((scene) => {
-        if (scene.isDestroyed()) return true;
-        if (scene.webContents.isLoading()) return false;
-        const parent = host ? host.getParentHandle(scene.getNativeWindowHandle()) : null;
-        return !current.size || !parent || !current.has(parent);
-      });
-      if (!scenes.length || shouldRebuild) rebuildScenes();
-    }
-    updateDesktopActivity();
   }
 
   app.whenReady().then(async () => {
@@ -381,21 +354,22 @@ if (process.platform !== "win32") {
     app.setLoginItemSettings({ openAtLogin: settings.startWithWindows });
     await configureIpc();
     createTray();
-    rebuildScenes();
+    startAmbientHost();
     if (!globalShortcut.register("Control+Alt+Space", openPanel)) showShellNotice("Le raccourci Ctrl+Alt+Espace est déjà utilisé par une autre application.");
-    globalShortcut.register("Control+Alt+Shift+Space", rebuildScenes);
-    screen.on("display-added", rebuildScenes);
-    screen.on("display-removed", rebuildScenes);
-    screen.on("display-metrics-changed", rebuildScenes);
-    powerMonitor.on("suspend", () => { for (const scene of scenes) if (!scene.isDestroyed()) scene.webContents.send("qg:ambient-active", false); });
-    powerMonitor.on("resume", updateDesktopActivity);
-    explorerRetry = setInterval(maintainShell, 1400);
+    globalShortcut.register("Control+Alt+Shift+Space", requestAmbientRebuild);
     app.on("activate", openPanel);
     appReady = true;
     if (secondInstancePending) openPanel();
   });
 
-  app.on("before-quit", () => { quitting = true; if (explorerRetry) clearInterval(explorerRetry); });
+  app.on("before-quit", () => {
+    quitting = true;
+    if (ambientRestartTimer) clearTimeout(ambientRestartTimer);
+    if (ambientProcess && ambientProcess.connected) {
+      try { ambientProcess.send({ type: "shutdown" }); ambientProcess.disconnect(); }
+      catch (_) { ambientProcess.kill(); }
+    }
+  });
   app.on("will-quit", () => globalShortcut.unregisterAll());
   app.on("window-all-closed", () => {});
   app.on("browser-window-created", (_event, window) => {

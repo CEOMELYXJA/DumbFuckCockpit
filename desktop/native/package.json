@@ -2,6 +2,7 @@
   "name": "desktop-host",
   "version": "0.1.0",
   "private": true,
+  "main": "index.js",
   "gypfile": true,
   "dependencies": { "node-addon-api": "8.5.0" }
 }

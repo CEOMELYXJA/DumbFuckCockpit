@@ -19,7 +19,7 @@
   const durations = [5, 15, 30, 60, 90];
   const ignoredHeadings = new Set(["tache", "taches", "liste", "liste de taches", "a faire", "todo", "to do", "priorites", "objectifs", "tasks", "notes", "projets"]);
   const byId = (id) => document.getElementById(id);
-  const state = { tasks: [], filter: "all", category: "", expanded: new Set(), pending: [], writeBlocked: false, settings: { side: "right", opacity: 0.82, motion: "measured", startWithWindows: false }, toastTimer: 0 };
+  const state = { tasks: [], filter: "all", category: "", expanded: new Set(), pending: [], writeBlocked: false, settings: { side: "right", opacity: 0.82, motion: "measured", fieldEnabled: true, startWithWindows: false }, toastTimer: 0 };
 
   function normalize(value) {
     return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -293,6 +293,7 @@
       byId("settingSide").value = state.settings.side || "right";
       byId("settingOpacity").value = String(Math.round((state.settings.opacity || 0.82) * 100));
       byId("settingMotion").value = state.settings.motion || "measured";
+      byId("settingFieldEnabled").checked = state.settings.fieldEnabled !== false;
       byId("settingStartup").checked = Boolean(state.settings.startWithWindows);
     }
   }
@@ -302,6 +303,7 @@
       side: byId("settingSide").value,
       opacity: Number(byId("settingOpacity").value) / 100,
       motion: byId("settingMotion").value,
+      fieldEnabled: byId("settingFieldEnabled").checked,
       startWithWindows: byId("settingStartup").checked
     });
     toast("Préférences du bureau enregistrées.");
@@ -347,7 +349,7 @@
       if (await save()) { byId("newTitle").value = ""; byId("newTitle").focus(); }
     });
     byId("openWeb").addEventListener("click", () => window.qgDesktop.openSite());
-    ["settingSide", "settingOpacity", "settingMotion", "settingStartup"].forEach((id) => byId(id).addEventListener("change", persistSettings));
+    ["settingSide", "settingOpacity", "settingMotion", "settingFieldEnabled", "settingStartup"].forEach((id) => byId(id).addEventListener("change", persistSettings));
     byId("importDialog").addEventListener("close", () => { state.pending = []; });
     window.addEventListener("keydown", (event) => { if (event.key === "Escape" && !byId("importDialog").open && !byId("settingsPanel").hidden) showSettings(false); });
     window.qgDesktop.onSnapshot((snapshot) => { state.tasks = (snapshot.tasks || []).map(createTask); state.writeBlocked = Boolean(snapshot.blocked); render(); });
