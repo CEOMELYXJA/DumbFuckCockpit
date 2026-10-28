@@ -131,8 +131,34 @@ Napi::Value GetParentHandle(const Napi::CallbackInfo& info) {
   if (info.Length() < 1) throw Napi::TypeError::New(info.Env(), "Fenêtre manquante.");
   const HWND child = ReadHandle(info[0]);
   const HWND parent = IsWindow(child) ? GetParent(child) : nullptr;
-  if (!parent) return info.Env().Null();
+  if (!IsWindow(parent)) return info.Env().Null();
   return Napi::BigInt::New(info.Env(), static_cast<uint64_t>(reinterpret_cast<uintptr_t>(parent)));
+}
+
+Napi::Value MoveDesktopWindow(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() < 2 || !info[1].IsObject()) throw Napi::TypeError::New(env, "La nouvelle position du widget est manquante.");
+  const HWND child = ReadHandle(info[0]);
+  const HWND parent = IsWindow(child) ? GetParent(child) : nullptr;
+  if (!IsWindow(parent)) throw Napi::Error::New(env, "Le widget n’est plus rattaché au bureau Windows.");
+
+  Napi::Object bounds = info[1].As<Napi::Object>();
+  const double scale = bounds.Get("scale").ToNumber().DoubleValue();
+  if (!(scale > 0.25 && scale < 8.0)) throw Napi::RangeError::New(env, "Facteur d’échelle d’écran invalide.");
+  const int left = static_cast<int>(std::lround(bounds.Get("x").ToNumber().DoubleValue() * scale));
+  const int top = static_cast<int>(std::lround(bounds.Get("y").ToNumber().DoubleValue() * scale));
+  const int width = static_cast<int>(std::lround(bounds.Get("width").ToNumber().DoubleValue() * scale));
+  const int height = static_cast<int>(std::lround(bounds.Get("height").ToNumber().DoubleValue() * scale));
+  if (width <= 0 || height <= 0) throw Napi::RangeError::New(env, "Dimensions de widget invalides.");
+
+  RECT parentBounds{};
+  if (!GetWindowRect(parent, &parentBounds)) throw Napi::Error::New(env, "La géométrie du bureau Windows est indisponible.");
+  const int x = left - parentBounds.left;
+  const int y = top - parentBounds.top;
+  if (!SetWindowPos(child, nullptr, x, y, width, height, SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW)) {
+    throw Napi::Error::New(env, "Windows n’a pas pu déplacer le widget sur le bureau.");
+  }
+  return Napi::Boolean::New(env, true);
 }
 
 Napi::Value IsDesktopForeground(const Napi::CallbackInfo& info) {
@@ -145,6 +171,7 @@ Napi::Value IsDesktopForeground(const Napi::CallbackInfo& info) {
 Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
   exports.Set("enumerateDesktopHosts", Napi::Function::New(env, EnumerateDesktopHosts));
   exports.Set("attachToDesktop", Napi::Function::New(env, AttachToDesktop));
+  exports.Set("moveDesktopWindow", Napi::Function::New(env, MoveDesktopWindow));
   exports.Set("getParentHandle", Napi::Function::New(env, GetParentHandle));
   exports.Set("isDesktopForeground", Napi::Function::New(env, IsDesktopForeground));
   return exports;
@@ -152,3 +179,4 @@ Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
 }  // namespace
 
 NODE_API_MODULE(desktop_host, Initialize)
+

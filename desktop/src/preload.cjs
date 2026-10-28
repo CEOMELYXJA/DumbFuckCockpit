@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("qgDesktop", Object.freeze({
   getSettings: () => ipcRenderer.invoke("qg:settings:read"),
   saveSettings: (settings) => ipcRenderer.invoke("qg:settings:save", settings),
   getAmbientStatus: () => ipcRenderer.invoke("qg:ambient:status"),
+  restartAmbient: () => ipcRenderer.invoke("qg:ambient:restart"),
   onAmbientStatus: (handler) => {
     const listener = (_event, status) => handler(status);
     ipcRenderer.on("qg:ambient:status", listener);

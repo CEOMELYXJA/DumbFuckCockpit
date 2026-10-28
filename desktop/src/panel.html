@@ -21,12 +21,13 @@
 
     <section class="settings-panel" aria-labelledby="settingsTitle">
       <div class="section-heading"><div><p class="eyebrow">VOTRE COCKPIT SUR LE BUREAU</p><h2 id="settingsTitle">Réglages simples</h2></div></div>
-      <p class="settings-note">Le widget montre le visuel animé sur votre bureau. Le site web sert à ouvrir les menus et gérer vos tâches. Vous n’avez pas besoin d’ouvrir les deux; les tâches du site ne sont pas copiées dans le widget.</p>
+      <p class="settings-note">Le widget montre le visuel animé sur votre bureau. Changer de côté déplace maintenant la scène sans la redémarrer. Le site web sert à ouvrir les menus et gérer vos tâches; les tâches du site ne sont pas copiées dans le widget.</p>
       <label class="setting-row"><span><b>Zone du widget</b><small>Laissez vos icônes de l’autre côté.</small></span><select id="settingSide"><option value="right">À droite</option><option value="left">À gauche</option></select></label>
       <label class="setting-row"><span><b>Transparence</b><small>Réglez l’intensité de la carte.</small></span><input id="settingOpacity" type="range" min="25" max="100" value="82"></label>
       <label class="setting-row"><span><b>Mouvement</b><small>Réduisez l’animation si vous le souhaitez.</small></span><select id="settingMotion"><option value="measured">Animé</option><option value="reduced">Réduit</option></select></label>
       <label class="setting-row setting-check"><span><b>Afficher sur le bureau</b><small>Masquez ou réaffichez le visuel.</small></span><input id="settingFieldEnabled" type="checkbox" checked></label>
       <label class="setting-row setting-check"><span><b>Lancer avec Windows</b><small>Facultatif · désactivé par défaut.</small></span><input id="settingStartup" type="checkbox"></label>
+      <button id="repairWidget" class="repair-widget" type="button">Réafficher le widget</button>
       <button id="openWeb" class="open-cockpit" type="button">Ouvrir le site interactif ↗</button>
       <p class="fine-print">Pour voir le widget seul, fermez la fenêtre du site web.</p>
     </section>

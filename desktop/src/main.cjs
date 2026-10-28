@@ -134,6 +134,17 @@ if (process.argv.includes("--qg-ambient-host")) {
     if (!sendAmbient("rebuild")) startAmbientHost();
   }
 
+  function restartAmbientHost() {
+    if (!settings.fieldEnabled) return false;
+    if (!ambientProcess || !ambientProcess.connected) {
+      startAmbientHost();
+      return true;
+    }
+    setAmbientStatus("starting", "Le widget redémarre sur le bureau…");
+    try { ambientProcess.send({ type: "shutdown" }); return true; }
+    catch (_) { ambientProcess.kill(); return true; }
+  }
+
   function startAmbientHost() {
     if (quitting || !settings.fieldEnabled || ambientRestartTimer) return;
     if (ambientProcess && ambientProcess.exitCode === null && !ambientProcess.killed) {
@@ -314,6 +325,7 @@ if (process.argv.includes("--qg-ambient-host")) {
     });
     ipcMain.handle("qg:settings:read", () => settings);
     ipcMain.handle("qg:ambient:status", () => ambientStatus);
+    ipcMain.handle("qg:ambient:restart", () => ({ ok: restartAmbientHost(), enabled: settings.fieldEnabled }));
     ipcMain.handle("qg:settings:save", async (_event, next) => {
       const previous = settings;
       settings = cleanSettings({ ...settings, ...next });

@@ -1,4 +1,14 @@
-# DumbFuckCockpit Widget 0.4.2
+# DumbFuckCockpit Widget 0.4.3
+
+Changer le widget de côté le déplace maintenant directement sur le bureau, sans détruire puis recréer sa scène. Cette correction évite que le visuel disparaisse lorsque vous ajustez sa position. Le mouvement, l’opacité et la position restent enregistrés.
+
+Le widget rejoint aussi une nouvelle position d’écran après le chargement de sa scène, même si un réglage est changé pendant le démarrage. Une détection temporaire du fond Windows ne détruit plus un widget déjà correctement attaché.
+
+Le panneau de réglages comprend un bouton **Réafficher le widget** qui redémarre la couche de bureau au besoin.
+
+Cette version comprend les réglages simplifiés et la correction du démarrage de la couche transparente des versions précédentes.
+
+Compatible avec Windows 10 et Windows 11. L’installateur n’est pas signé; Windows peut afficher un avertissement d’éditeur non vérifié.
 
 L’installation n’offre plus de choix de dossier. Elle place les fichiers du programme dans le dossier standard des applications Windows, crée un seul raccourci sur le Bureau et démarre le widget après l’installation.
 

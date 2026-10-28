@@ -97,7 +97,6 @@ function notifyUnavailable(message) {
 
 function createScene(display, desktopHost) {
   const bounds = widgetBounds(display);
-  const displayZone = { ...display, bounds };
   const window = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     show: false, frame: false, transparent: true, backgroundColor: "#00000000",
@@ -122,7 +121,15 @@ function createScene(display, desktopHost) {
   window.webContents.once("did-finish-load", () => {
     try {
       if (!nativeHost) throw new Error("Le module Windows de la couche arrière n’est pas disponible.");
-      nativeHost.attachToDesktop(window.getNativeWindowHandle(), nativeHandleBuffer(desktopHost.handle), monitorBounds(displayZone));
+      const currentDisplay = screen.getAllDisplays().find((item) => item.id === display.id) || display;
+      const currentBounds = widgetBounds(currentDisplay);
+      window.__qgDisplayId = display.id;
+      nativeHost.attachToDesktop(
+        window.getNativeWindowHandle(),
+        nativeHandleBuffer(desktopHost.handle),
+        monitorBounds({ ...currentDisplay, bounds: currentBounds })
+      );
+      window.__qgAttached = true;
       window.showInactive();
       window.webContents.send("qg:scene-state", { categories: snapshot.categories, tasks: snapshot.tasks, settings: snapshot.settings });
       window.webContents.send("qg:ambient-active", false);
@@ -135,6 +142,27 @@ function createScene(display, desktopHost) {
   });
   window.on("closed", () => { scenes = scenes.filter((item) => item !== window); });
   scenes.push(window);
+}
+
+function moveScenesInPlace() {
+  if (!nativeHost || !scenes.length) return false;
+  const displays = screen.getAllDisplays();
+  try {
+    for (const window of scenes) {
+      if (window.isDestroyed() || !window.__qgAttached) continue;
+      const display = displays.find((item) => item.id === window.__qgDisplayId);
+      if (!display) return false;
+      const bounds = widgetBounds(display);
+      nativeHost.moveDesktopWindow(
+        window.getNativeWindowHandle(),
+        monitorBounds({ ...display, bounds })
+      );
+    }
+    return true;
+  } catch (error) {
+    sendToParent({ type: "shell-error", message: error.message });
+    return false;
+  }
 }
 
 function rebuildScenes() {
@@ -170,7 +198,7 @@ function checkShell() {
   const missing = scenes.some((window) => {
     if (window.isDestroyed() || window.webContents.isLoading()) return false;
     const parent = nativeHost ? nativeHost.getParentHandle(window.getNativeWindowHandle()) : null;
-    return !current.size || !parent || !current.has(parent);
+    return !parent || (current.size > 0 && !current.has(parent));
   });
   if (missing || (!scenes.length && current.size)) rebuildScenes();
   try { broadcastActivity(Boolean(nativeHost && nativeHost.isDesktopForeground())); }
@@ -183,8 +211,13 @@ process.on("message", (message) => {
     const previousSide = snapshot.settings?.side;
     snapshot = message.payload;
     receivedSnapshot = true;
-    if (snapshot.settings?.fieldEnabled === false || !scenes.length || previousSide !== snapshot.settings?.side) rebuildScenes();
-    else broadcastState();
+    if (snapshot.settings?.fieldEnabled === false || !scenes.length) rebuildScenes();
+    else if (previousSide !== snapshot.settings?.side) {
+      if (moveScenesInPlace()) {
+        broadcastState();
+        reportStatus("visible", "Widget transparent déplacé sur le bureau.");
+      } else rebuildScenes();
+    } else broadcastState();
   } else if (message.type === "rebuild") {
     rebuildScenes();
   } else if (message.type === "shutdown") {

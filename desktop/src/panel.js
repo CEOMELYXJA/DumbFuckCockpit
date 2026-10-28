@@ -61,6 +61,12 @@
 
   byId("panelClose").addEventListener("click", () => window.qgDesktop.closePanel());
   byId("openWeb").addEventListener("click", () => window.qgDesktop.openSite());
+  byId("repairWidget").addEventListener("click", async () => {
+    try {
+      const result = await window.qgDesktop.restartAmbient();
+      toast(result.enabled ? "Le widget redémarre sur le bureau…" : "Activez d’abord « Afficher sur le bureau ». ");
+    } catch (error) { toast(`Le widget n’a pas pu redémarrer : ${error.message}`); }
+  });
   ["settingSide", "settingOpacity", "settingMotion", "settingFieldEnabled", "settingStartup"]
     .forEach((id) => byId(id).addEventListener("change", persistSettings));
   window.qgDesktop.onAmbientStatus(renderAmbientStatus);

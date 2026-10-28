@@ -18,6 +18,8 @@ Vous n’avez pas à choisir un dossier d’installation, à extraire des fichie
 
 Pour les réglages, double-cliquez de nouveau sur le raccourci du Bureau pendant que le widget fonctionne. Fermer le panneau laisse le widget actif.
 
+Changer le côté déplace le widget sur place sans redémarrer sa scène. Si le visuel ne réapparaît pas, le bouton **Réafficher le widget** dans ce même panneau redémarre sa couche de bureau.
+
 ## Mise à jour
 
 Le widget contient une copie des fichiers du site au moment de la publication. Pour obtenir un nouveau visuel publié, téléchargez et installez la nouvelle version Windows. Les données du site restent dans le navigateur.
