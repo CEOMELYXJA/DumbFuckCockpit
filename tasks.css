@@ -1,5 +1,5 @@
 #qgToolsRoot{position:fixed;inset:0;z-index:12;pointer-events:none;color:#e6f0ff;font:14px/1.35 'Saira Condensed',Bahnschrift,'Arial Narrow',sans-serif;letter-spacing:.01em}
-#qgToolbar{position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;gap:7px;max-width:calc(100vw - 72px);pointer-events:auto}
+#qgToolbar{position:absolute;left:12px;top:calc(36px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;gap:7px;max-width:calc(100vw - 72px);pointer-events:auto}
 #qgToolbar>button{padding:7px 11px;border:1px solid #35527f;border-radius:9px;background:rgba(7,11,21,.94);color:#e6f0ff;box-shadow:0 4px 18px #0008;backdrop-filter:blur(10px);font:inherit;white-space:nowrap;cursor:pointer}
 #qgToolbar>button:first-child{border-color:#4fd1e8;color:#8eeaff}
 #qgToolbar>button:focus-visible,#qgTaskManager button:focus-visible,#qgTaskManager input:focus-visible,#qgTaskManager select:focus-visible,#qgTaskManager textarea:focus-visible,#qgTaskManager summary:focus-visible{outline:2px solid #ffb347;outline-offset:2px}
@@ -53,5 +53,5 @@
 .qg-task-origin{color:#8199bd;font-size:11px}
 .qg-empty{padding:18px;border:1px dashed #35527f;border-radius:13px;color:#a9bdd9;text-align:center;line-height:1.5}
 .qg-feedback{min-height:1em;margin:8px 0 0;color:#9ceeff}
-@media(max-width:680px){#qgTaskShade{padding:7px}#qgTaskManager{max-height:calc(100dvh - 14px);border-radius:15px}.qg-task-fields{grid-template-columns:1fr 1fr}.qg-task-fields label:first-child{grid-column:1/-1}.qg-add{align-items:stretch}.qg-add button{align-self:stretch}.qg-head h2{font-size:22px}#qgToolbar{left:8px;top:calc(10px + env(safe-area-inset-top,0px))}#qgToolbar>button{padding:6px 8px;font-size:12px}}
+@media(max-width:680px){#qgTaskShade{padding:7px}#qgTaskManager{max-height:calc(100dvh - 14px);border-radius:15px}.qg-task-fields{grid-template-columns:1fr 1fr}.qg-task-fields label:first-child{grid-column:1/-1}.qg-add{align-items:stretch}.qg-add button{align-self:stretch}.qg-head h2{font-size:22px}#qgToolbar{left:8px;top:calc(34px + env(safe-area-inset-top,0px))}#qgToolbar>button{padding:6px 8px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){#qgTaskManager *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
