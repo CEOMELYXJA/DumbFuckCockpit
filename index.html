@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&display=swap">
+<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#070b15"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&display=swap"><link rel="stylesheet" href="./tasks.css">
 <title>QG – Cockpit de vie</title>
 <style>
 :root{color-scheme:dark;--bg:#070b15;--bg2:#0d1424;--ln:#25365a;--tx:#e6f0ff;--dm:#8ea6c9;--am:#ffb347;--cy:#4fd1e8;--mg:#ff4d8d;--ok:#8be36a;box-sizing:border-box}
@@ -303,4 +304,5 @@ addEventListener("pointerup",()=>{PB.lk=PB.rk=0});
 $("#pbn").addEventListener("click",pbN);
 addEventListener("keydown",e=>{if(!PB.on)return;if(e.key==="ArrowLeft")PB.lk=1;if(e.key==="ArrowRight")PB.rk=1;if(e.key===" "){pbN();e.preventDefault()}});
 addEventListener("keyup",e=>{if(e.key==="ArrowLeft")PB.lk=0;if(e.key==="ArrowRight")PB.rk=0});
-</script></body></html>
+</script><script src="./tasks.js"></script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js",{scope:"./"}).catch(()=>{}))}</script></body></html>
+
