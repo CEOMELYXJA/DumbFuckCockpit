@@ -244,8 +244,8 @@ if (process.argv.includes("--qg-ambient-host")) {
 
   async function persistTasks(next) {
     if (tasksRecoveryNeeded) throw new Error("Le fichier de tâches semble endommagé. Il reste intact; les modifications sont bloquées pour éviter de l’écraser.");
-    tasks = cleanTaskList(next);
-    const snapshot = JSON.stringify({ format: "qg-personal-tasks", version: 2, tasks }, null, 2);
+    const cleaned = cleanTaskList(next);
+    const snapshot = JSON.stringify({ format: "qg-personal-tasks", version: 2, tasks: cleaned }, null, 2);
     const write = taskWriteQueue.then(async () => {
       if (!tasksLoadedFromBackup) {
         try { await atomicWrite(`${tasksPath}.previous`, await fs.readFile(tasksPath, "utf8")); }
@@ -256,6 +256,7 @@ if (process.argv.includes("--qg-ambient-host")) {
     });
     taskWriteQueue = write.catch(() => {});
     await write;
+    tasks = cleaned;
     syncViews();
     return { ok: true, summary: taskSummary() };
   }
@@ -288,9 +289,11 @@ if (process.argv.includes("--qg-ambient-host")) {
     });
     ipcMain.handle("qg:settings:read", () => settings);
     ipcMain.handle("qg:settings:save", async (_event, next) => {
+      const previous = settings;
       settings = cleanSettings({ ...settings, ...next });
+      try { await queueSettingsWrite(); }
+      catch (error) { settings = previous; throw error; }
       app.setLoginItemSettings({ openAtLogin: settings.startWithWindows });
-      await queueSettingsWrite();
       syncViews();
       if (settings.fieldEnabled) startAmbientHost(); else stopAmbientHost();
       return settings;
@@ -313,8 +316,14 @@ if (process.argv.includes("--qg-ambient-host")) {
   }
 
   async function toggleAmbientField() {
+    const previous = settings.fieldEnabled;
     settings.fieldEnabled = !settings.fieldEnabled;
-    await queueSettingsWrite();
+    try { await queueSettingsWrite(); }
+    catch (error) {
+      settings.fieldEnabled = previous;
+      showShellNotice(`Les préférences n’ont pas pu être enregistrées : ${error.message}`);
+      return;
+    }
     trayMenu();
     syncViews();
     if (settings.fieldEnabled) startAmbientHost(); else stopAmbientHost();

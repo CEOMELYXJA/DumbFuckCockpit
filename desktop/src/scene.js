@@ -46,7 +46,7 @@
   function drawFrame(now) {
     if (!state.active || document.hidden) { setTimeout(() => requestAnimationFrame(drawFrame), 1000); return; }
     const motion = reducedMotion.matches || state.settings.motion === "reduced" ? 0 : 1;
-    const interval = motion ? 34 : 1400;
+    const interval = motion ? 34 : 1000;
     if (now - state.lastFrame < interval) { requestAnimationFrame(drawFrame); return; }
     const elapsed = Math.max(0, Math.min(0.1, (now - state.lastFrame) / 1000 || 1 / 30));
     state.lastFrame = now;

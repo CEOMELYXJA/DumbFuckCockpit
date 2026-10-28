@@ -70,6 +70,10 @@
       render();
       return true;
     } catch (error) {
+      const saved = await window.qgDesktop.getTasks();
+      state.tasks = (saved.tasks || []).map(createTask);
+      state.writeBlocked = Boolean(saved.blocked);
+      render();
       toast(`Sauvegarde impossible : ${error.message}`);
       return false;
     }
@@ -254,7 +258,8 @@
       const title = line.trim().replace(/\s+/g, " ").slice(0, 180);
       if (title) result.push(createTask({ title, category: taskCategory, status: done ? "done" : taskCategory ? "todo" : "inbox", source: "txt" }));
     }
-    return result.slice(0, 500);
+    if (result.length > 500) throw new Error("Ce fichier contient plus de 500 éléments. Aucun import n’a été préparé; divisez la liste pour éviter une importation incomplète.");
+    return result;
   }
 
   function parseFile(file) {
@@ -264,7 +269,8 @@
       if (!data || !["qg-personal-tasks", "qg-cockpit-tasks"].includes(data.format) || !Array.isArray(data.tasks)) {
         throw new Error("Ce fichier n’est pas une sauvegarde QG reconnue. Aucune donnée n’a été modifiée.");
       }
-      return data.tasks.slice(0, 500).map((task) => createTask({ ...task, source: "sauvegarde QG" })).filter((task) => task.title);
+      if (data.tasks.length > 500) throw new Error("Cette sauvegarde dépasse 500 tâches. Aucun import n’a été préparé; archivez une partie de la liste d’abord.");
+      return data.tasks.map((task) => createTask({ ...task, source: "sauvegarde QG" })).filter((task) => task.title);
     }
     return parseText(file.text);
   }
@@ -273,8 +279,7 @@
     state.pending = items;
     const preview = byId("importPreview"), rows = byId("previewRows");
     rows.replaceChildren();
-    const existing = new Set(state.tasks.map((task) => `${normalize(task.title)}::${task.category || ""}`));
-    const newOnes = items.filter((task) => !existing.has(`${normalize(task.title)}::${task.category || ""}`));
+    const newOnes = collectImportAdditions(items);
     const duplicates = items.length - newOnes.length;
     byId("previewSummary").textContent = `${items.length} élément${items.length === 1 ? "" : "s"} repéré${items.length === 1 ? "" : "s"} dans « ${fileName} » · ${newOnes.length} à ajouter · ${duplicates} doublon${duplicates === 1 ? "" : "s"} ignoré${duplicates === 1 ? "" : "s"}`;
     for (const task of items.slice(0, 14)) {
@@ -285,6 +290,18 @@
     byId("importConfirm").disabled = newOnes.length === 0;
     byId("importConfirm").textContent = newOnes.length ? `Ajouter ${newOnes.length} tâche${newOnes.length === 1 ? "" : "s"}` : "Aucune nouvelle tâche";
     preview.hidden = false;
+  }
+
+  function collectImportAdditions(items) {
+    const seen = new Set(state.tasks.map((task) => `${normalize(task.title)}::${task.category || ""}`));
+    const additions = [];
+    for (const task of items) {
+      const key = `${normalize(task.title)}::${task.category || ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      additions.push(task);
+    }
+    return additions;
   }
 
   function showSettings(open) {
@@ -299,14 +316,20 @@
   }
 
   async function persistSettings() {
-    state.settings = await window.qgDesktop.saveSettings({
-      side: byId("settingSide").value,
-      opacity: Number(byId("settingOpacity").value) / 100,
-      motion: byId("settingMotion").value,
-      fieldEnabled: byId("settingFieldEnabled").checked,
-      startWithWindows: byId("settingStartup").checked
-    });
-    toast("Préférences du bureau enregistrées.");
+    try {
+      state.settings = await window.qgDesktop.saveSettings({
+        side: byId("settingSide").value,
+        opacity: Number(byId("settingOpacity").value) / 100,
+        motion: byId("settingMotion").value,
+        fieldEnabled: byId("settingFieldEnabled").checked,
+        startWithWindows: byId("settingStartup").checked
+      });
+      toast("Préférences du bureau enregistrées.");
+    } catch (error) {
+      state.settings = await window.qgDesktop.getSettings().catch(() => state.settings);
+      showSettings(true);
+      toast(`Préférences impossibles à enregistrer : ${error.message}`);
+    }
   }
 
   function initialize() {
@@ -326,8 +349,7 @@
       } catch (error) { toast(error.message || "Impossible de lire ce fichier."); }
     });
     byId("importConfirm").addEventListener("click", async () => {
-      const existing = new Set(state.tasks.map((task) => `${normalize(task.title)}::${task.category || ""}`));
-      const additions = state.pending.filter((task) => !existing.has(`${normalize(task.title)}::${task.category || ""}`));
+      const additions = collectImportAdditions(state.pending);
       if (!additions.length) return;
       if (state.tasks.length + additions.length > 500) { toast("La liste atteindrait la limite de 500 tâches."); return; }
       state.tasks.push(...additions); state.pending = [];
