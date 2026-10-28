@@ -11,61 +11,28 @@
 <body>
   <main class="surface">
     <header class="masthead drag-region">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">DFC</span><div><p class="eyebrow">DUMBFUCKCOCKPIT <span>·</span> WIDGET WINDOWS</p><h1>Widget de bureau</h1></div></div>
-      <div class="window-actions no-drag"><button id="settingsOpen" class="action-button settings-button" type="button" aria-label="Préférences du widget" title="Réglages du widget">⚙ Réglages</button><button id="panelClose" class="icon-button close" type="button" aria-label="Masquer le panneau" title="Masquer · le widget reste actif">×</button></div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">DFC</span><div><p class="eyebrow">DUMBFUCKCOCKPIT · WINDOWS</p><h1>Widget de bureau</h1></div></div>
+      <button id="panelClose" class="icon-button no-drag" type="button" aria-label="Fermer les réglages" title="Fermer · le widget reste sur le bureau">×</button>
     </header>
 
-    <section class="system-strip" aria-label="État du bureau">
-      <span class="live-dot" aria-hidden="true"></span><span id="desktopState">BUREAU · COUCHE ARRIÈRE</span><span class="strip-divider"></span><span id="taskCount">0 TÂCHE</span><span class="strip-spacer"></span><span class="key-hint">CTRL + ALT + ESPACE</span>
+    <section class="system-strip" aria-label="État du widget">
+      <span class="live-dot" aria-hidden="true"></span><span id="desktopState">WIDGET · DÉMARRAGE EN COURS</span>
     </section>
 
-    <nav class="views" aria-label="Filtres des tâches">
-      <button class="view active" data-filter="all" type="button"><span>File active</span><b id="countActive">0</b></button>
-      <button class="view" data-filter="doing" type="button"><span>En cours</span><b id="countDoing">0</b></button>
-      <button class="view" data-filter="inbox" type="button"><span>À trier</span><b id="countInbox">0</b></button>
-      <button class="view" data-filter="done" type="button"><span>Terminées</span><b id="countDone">0</b></button>
-    </nav>
-
-    <section class="focusline" aria-label="Priorité du moment">
-      <div class="focus-ring"><span id="focusPercent">0</span></div>
-      <div class="focus-copy"><p class="eyebrow">CHARGE DU MOMENT</p><h2 id="focusHeading">Votre prochain geste commence ici.</h2><p id="focusSub" class="subtle">Importez votre liste pour faire émerger le prochain pas.</p></div>
-      <div class="focus-total"><strong id="focusOpen">0</strong><span>ACTIVES</span></div>
+    <section class="settings-panel" aria-labelledby="settingsTitle">
+      <div class="section-heading"><div><p class="eyebrow">VOTRE COCKPIT SUR LE BUREAU</p><h2 id="settingsTitle">Réglages simples</h2></div></div>
+      <p class="settings-note">C’est la carte originale de votre cockpit, animée derrière les icônes. Chrome garde votre progression; le widget ne capte pas les clics.</p>
+      <label class="setting-row"><span><b>Zone du widget</b><small>Laissez vos icônes de l’autre côté.</small></span><select id="settingSide"><option value="right">À droite</option><option value="left">À gauche</option></select></label>
+      <label class="setting-row"><span><b>Transparence</b><small>Réglez l’intensité de la carte.</small></span><input id="settingOpacity" type="range" min="25" max="100" value="82"></label>
+      <label class="setting-row"><span><b>Mouvement</b><small>Réduisez l’animation si vous le souhaitez.</small></span><select id="settingMotion"><option value="measured">Animé</option><option value="reduced">Réduit</option></select></label>
+      <label class="setting-row setting-check"><span><b>Afficher sur le bureau</b><small>Masquez ou réaffichez le visuel.</small></span><input id="settingFieldEnabled" type="checkbox" checked></label>
+      <label class="setting-row setting-check"><span><b>Lancer avec Windows</b><small>Facultatif · désactivé par défaut.</small></span><input id="settingStartup" type="checkbox"></label>
+      <button id="openWeb" class="open-cockpit" type="button">Ouvrir mon cockpit Chrome ↗</button>
+      <p class="fine-print">Aucun fichier JSON à importer pour afficher le widget.</p>
     </section>
 
-    <section class="task-section">
-      <div class="section-heading"><div><p class="eyebrow">SÉQUENCE PERSONNELLE</p><h2 id="listHeading">À faire maintenant</h2></div><div class="actions"><button id="importOpen" class="action-button" type="button">Importer</button><button id="exportOpen" class="action-button secondary" type="button" title="Créer une copie compatible avec le cockpit web">Exporter</button></div></div>
-      <div id="categoryRail" class="category-rail" aria-label="Filtrer par univers"></div>
-      <form id="addForm" class="add-row">
-        <label class="sr-only" for="newTitle">Nouvelle tâche</label><input id="newTitle" maxlength="180" autocomplete="off" placeholder="Ajouter un prochain geste précis…" required>
-        <label class="sr-only" for="newCategory">Univers de la tâche</label><select id="newCategory" aria-label="Univers"><option value="">À trier</option></select>
-        <button class="add-submit" type="submit" aria-label="Ajouter la tâche">＋</button>
-      </form>
-      <div id="taskList" class="task-list" aria-live="polite"></div>
-    </section>
-
-    <section id="settingsPanel" class="settings-panel" hidden aria-labelledby="settingsTitle">
-      <div class="section-heading"><div><p class="eyebrow">COUCHE DU BUREAU</p><h2 id="settingsTitle">Préférences d’affichage</h2></div><button id="settingsClose" class="icon-button no-drag" type="button" aria-label="Fermer les préférences">×</button></div>
-      <p class="subtle settings-note">La scène animée est le visuel derrière vos icônes. Fermez ce panneau : elle reste sur le bureau.</p>
-      <label class="setting-row"><span><b>Zone visuelle</b><small>Choisissez le côté; la scène reste derrière les icônes.</small></span><select id="settingSide"><option value="right">À droite · colonne habituelle d’icônes libre</option><option value="left">À gauche</option></select></label>
-      <label class="setting-row"><span><b>Transparence du champ</b><small>Réglez sa présence sur votre fond d’écran.</small></span><input id="settingOpacity" type="range" min="62" max="96" value="82"></label>
-      <label class="setting-row"><span><b>Mouvement</b><small>Rythme mesuré ou animation réduite.</small></span><select id="settingMotion"><option value="measured">Présence animée · 30 images/s</option><option value="reduced">Mouvement réduit · 1 image/s</option></select></label>
-      <label class="setting-row setting-check"><span><b>Widget transparent sur le bureau</b><small>Affiche les univers derrière les icônes Windows.</small></span><input id="settingFieldEnabled" type="checkbox" checked></label>
-      <label class="setting-row setting-check"><span><b>Lancer avec Windows</b><small>Démarrage facultatif; désactivé par défaut.</small></span><input id="settingStartup" type="checkbox"></label>
-      <p class="fine-print">Le widget et le site web gardent leurs listes séparées. Utilisez Exporter/Importer pour les transférer. L’import affiche un aperçu avant d’ajouter quoi que ce soit.</p>
-    </section>
-
-    <footer class="footer"><span>LE VISUEL RESTE ACTIF QUAND CE PANNEAU EST FERMÉ</span><button id="openWeb" type="button">Ouvrir le cockpit web ↗</button></footer>
+    <footer class="footer"><span>FERMER CE PANNEAU LAISSE LE WIDGET ACTIF</span></footer>
   </main>
-
-  <dialog id="importDialog" class="dialog">
-    <form method="dialog" class="dialog-shell">
-      <div class="dialog-head"><div><p class="eyebrow">REPRISE SANS RETAPER</p><h2>Importer une liste</h2></div><button class="icon-button no-drag" value="cancel" aria-label="Fermer">×</button></div>
-      <p class="subtle">Choisissez un fichier .txt, .md ou une sauvegarde JSON du cockpit. Rien ne sera ajouté avant votre confirmation.</p>
-      <button id="chooseFile" class="file-picker" type="button"><span aria-hidden="true">↧</span><span><b>Choisir un fichier</b><small>Maximum 2 Mo · votre fichier reste sur cet ordinateur</small></span></button>
-      <div id="importPreview" class="import-preview" hidden><div class="preview-summary" id="previewSummary"></div><ul id="previewRows"></ul><p id="previewNotice" class="subtle"></p></div>
-      <div class="dialog-actions"><button class="action-button secondary" value="cancel">Annuler</button><button id="importConfirm" class="action-button primary" type="button" disabled>Confirmer l’ajout</button></div>
-    </form>
-  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./panel.js"></script>
 </body>

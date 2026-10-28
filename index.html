@@ -4,6 +4,7 @@
 <link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#080b10"><link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&display=swap"><link rel="stylesheet" href="./tasks.css">
 <title>QG – Cockpit de vie</title>
+<script>if(new URLSearchParams(location.search).get("desktopWidget")==="1")document.documentElement.classList.add("desktop-widget")</script>
 <style>
 :root{color-scheme:dark;--bg:#080b10;--bg2:#11161d;--ln:#303943;--tx:#e5e0d5;--dm:#a9a69e;--am:#b99a70;--cy:#718c8d;--mg:#a5797b;--ok:#82917a;box-sizing:border-box}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -88,6 +89,10 @@ html,body{height:100%;margin:0;overflow:hidden}
 #pbw{--tx:#e5e0d5;--dm:#aaa69d;--bg:#0c1015;--ln:#303943;color:var(--tx);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,360px);background:linear-gradient(155deg,#191e23,#0b0f13 76%);border:1px solid var(--mg);border-radius:14px;padding:12px;z-index:6;display:none;box-shadow:0 20px 60px -34px var(--mg)}
 #pbc{display:block;height:min(62vh,480px);aspect-ratio:320/480;width:auto;max-width:100%;margin:0 auto;touch-action:none;border-radius:10px;border:1px solid var(--cy);background:#090b0d}
 #pbw .row{margin-top:10px;justify-content:center}
+html.desktop-widget,html.desktop-widget body{background:transparent!important}
+html.desktop-widget body::before,html.desktop-widget #win::after,html.desktop-widget #crt,html.desktop-widget #zb,html.desktop-widget #pan,html.desktop-widget #set,html.desktop-widget #pbw,html.desktop-widget #ts,html.desktop-widget #qgToolbar,html.desktop-widget #qgTaskShade{display:none!important}
+html.desktop-widget #win{background:transparent!important;cursor:default}
+html.desktop-widget #gx{opacity:var(--desktop-widget-opacity,.82)}
 </style></head><body><div id="crt"></div><div id="win"><canvas id="gx"></canvas><div id="pan"></div>
 <div id="set"><button data-a="sx" style="float:right" aria-label="Fermer">✕</button><h2 id="stt" class="dh"></h2><div id="sdesc" class="dm"></div><div id="hub" class="hub"></div>
 <div class="row"><label id="lrev">Revenus du mois <input type="number" id="rev" min="0"></label><label id="lgoal">Objectif <input type="number" id="goal" min="0"></label><label id="len">Énergie du jour <input type="range" id="en" min="0" max="100"></label></div><div id="al"></div>
@@ -111,7 +116,7 @@ const D=[
 ["app","Design visuel","🎨","#a87d98","Thèmes créés|3|1;Fonds animés|5|1;Icônes dessinées|20|2;Widgets conçus|5|1;Menus personnalisés|4|1;Palettes testées|8|1;Animations d’interface|6|1;Captures partagées|6|1;Thèmes vendus|3|1;Packs publiés|2|1","Dessiner une icône;Tester une palette;Animer un élément;Créer un fond d’écran"]
 ];
 const Z=D.map(([id,n,i,c,s,q])=>({id,n,i,c,s:s.split(";").map(x=>{const a=x.split("|");return[a[0],+a[1],+a[2]]}),q:q.split(";")}));
-const $=s=>document.querySelector(s),KEY="qg-v3";
+const $=s=>document.querySelector(s),KEY="qg-v3",DESKTOP_WIDGET=new URLSearchParams(location.search).get("desktopWidget")==="1";
 const day=(o=0)=>{const d=new Date();d.setDate(d.getDate()-o);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()};
 let S={xp:0,pts:0,streak:0,last:"",rev:0,goal:5000,en:70,lvl:{},v:{},done:{d:"",i:{}},sel:"gar"};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
@@ -180,7 +185,8 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b
 ["rev","goal","en"].forEach(id=>$("#"+id).addEventListener("input",e=>{S[id]=+e.target.value||0;R()}));
 /* Fenêtre du vaisseau */
 let foc=0,FA=1,LB=[],popen=false,SS=null,hits=[],zt=1,zm=1,fid=null,fcam=null,FP=null,cam={x:0,y:0,ay:0},TT=0,pinch=0,warp=0,lastSel="",gyaw=0,gpit=.75,gd=null,GW=0,GH=0;
-const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches,gx=$("#gx"),c2=gx.getContext("2d");
+let reduce=matchMedia("(prefers-reduced-motion:reduce)").matches,gx=$("#gx"),c2=gx.getContext("2d");
+if(DESKTOP_WIDGET&&window.qgScene){window.qgScene.onSceneState(s=>{const settings=s&&s.settings||{};if(Number.isFinite(settings.opacity))document.documentElement.style.setProperty("--desktop-widget-opacity",Math.max(.25,Math.min(1,settings.opacity)));reduce=settings.motion==="reduced"||matchMedia("(prefers-reduced-motion:reduce)").matches})}
 const ZG=[["arc","vr"],["lab","dro","soc"],["ban","cry","ate"],["cor","mai","gar"],["tat","app"]];
 const GAL=Array.from({length:1100},()=>{const arm=Math.floor(Math.random()*3),r=Math.pow(Math.random(),.65)*300,a=arm*2.094+r*.016+(Math.random()-.5)*.55;return{r,a,y:(Math.random()-.5)*(36-r*.09),h:r<70?45:r<170?205:300,s:Math.random()*1.3+.5}});
 const WS=Array.from({length:70},()=>({x:Math.random()*2-1,y:Math.random()*2-1,z:Math.random()}));
@@ -239,7 +245,7 @@ function sky360(t){const cy=Math.cos(gyaw),sy=Math.sin(gyaw),cp=Math.cos(gpit),s
   if(zm<1.3){const y=GH-18,label="GLISSER · PILOTER     PINCER · ZOOMER     TOUCHER · ENTRER",w=Math.min(390,GW-24);c2.textAlign="center";c2.fillStyle="rgba(8,10,12,.7)";c2.fillRect((GW-w)/2,y-15,w,23);c2.strokeStyle="rgba(143,151,145,.24)";c2.strokeRect((GW-w)/2+.5,y-14.5,w-1,22);c2.font="10px 'Saira Condensed',Bahnschrift,'Arial Narrow',sans-serif";c2.fillStyle="rgba(205,199,185,.82)";c2.fillText(label,GW/2,y-3)}c2.restore()}
 function gframe(t){TT=t;zm+=(zt-zm)*.07;foc=Math.min(1,Math.max(0,(zm-1.6)/1.2));if(fid!=null)fcam=fid;else if(zm<1.03)fcam=null;const want=popen&&fid!=null;if(want!==S.open||(want&&S.sel!==fid)){S.open=want;if(want)S.sel=fid;R()}
 
- c2.fillStyle="#080b10";c2.fillRect(0,0,GW,GH);
+ if(DESKTOP_WIDGET)c2.clearRect(0,0,GW,GH);else{c2.fillStyle="#080b10";c2.fillRect(0,0,GW,GH)}
   drawNebula(t);sky360(t);shoot();warp*=.965;const sp=.0009*(1+warp*10);c2.lineWidth=1;
  WS.forEach(w=>{w.z-=sp;if(w.z<.03){w.z=1;w.x=Math.random()*2-1;w.y=Math.random()*2-1}const k=.1*GW,l=sp*(3+warp*12);c2.strokeStyle="rgba(205,196,177,"+((1-w.z)*(1-foc)*.72).toFixed(2)+")";c2.beginPath();c2.moveTo(GW/2+w.x*k/w.z,GH/2+w.y*k/w.z);c2.lineTo(GW/2+w.x*k/(w.z+l),GH/2+w.y*k/(w.z+l));c2.stroke()});
   GAL.forEach(p=>{const a=p.a+t*.00002*(300/(p.r+50)),q=P(Math.cos(a)*p.r,p.y,Math.sin(a)*p.r);c2.fillStyle="hsla("+p.h+",48%,"+(p.r<70?62:49)+"%,"+((.18+.38*q.k/1.3)*(1-foc*.9)).toFixed(2)+")";c2.beginPath();c2.arc(q.x,q.y,p.s*q.k*.9,0,7);c2.fill()});
@@ -268,7 +274,7 @@ function gframe(t){TT=t;zm+=(zt-zm)*.07;foc=Math.min(1,Math.max(0,(zm-1.6)/1.2))
   c2.lineWidth=3;c2.strokeStyle="rgba(255,255,255,.15)";c2.beginPath();c2.arc(q.x,q.y,r+6,0,7);c2.stroke();
   c2.strokeStyle=d[3];c2.shadowColor=d[3];c2.shadowBlur=gd?0:6+8*f;c2.beginPath();c2.arc(q.x,q.y,r+6,-1.5708,-1.5708+6.2832*Math.min(1,Math.max(0,d[1])));c2.stroke();c2.shadowBlur=0;
   LB.push([d[0],q.x,q.y+r+22,Math.round(10+2.6*q.k),"#d9d3c8",1-foc*.92],[d[2],q.x,q.y+r+37,Math.round(10+2.6*q.k),d[3],1-foc*.92]);hits.push({pl:it.i,x:q.x,y:q.y,r:r})});
-  drawLB();questDraw();c2.restore();drawTelemetry(t)}
+  drawLB();questDraw();c2.restore();if(!DESKTOP_WIDGET)drawTelemetry(t)}
 const pts=new Map();
 const SD=["Jours d’affilée avec au moins une quête cochée. Coches-en une chaque jour pour garder ta série.","Quêtes cochées aujourd’hui sur le total. Elles se remettent à zéro chaque jour.","Entre tes revenus du mois et ton objectif.","Ton énergie du jour. Sous 35 %, choisis une journée douce.","Ton cap : la progression moyenne de toutes tes catégories ce mois-ci.","Ton niveau, ton XP et tes points. Tu peux aussi tout remettre à zéro ici."];
 function openSet(k){const sun=k==="sun",i=sun?5:k;$("#stt").textContent=sun?"Le soleil – ton QG":["Série","Quêtes","Revenus","Énergie","Orientation"][i];$("#sdesc").textContent=SD[i];
@@ -285,8 +291,9 @@ addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,{
 addEventListener("pointerup",e=>{pts.delete(e.pointerId);pinch=0;if(!gd)return;const tap=Math.hypot(e.clientX-gd.x,e.clientY-gd.y)<(e.pointerType==="touch"?16:8);if(e.timeStamp-(gd.t||0)>90){spin.y=0;spin.p=0}gd=null;if(!tap)return;const r=gx.getBoundingClientRect();tapAt(e.clientX-r.left,e.clientY-r.top)});
 addEventListener("pointercancel",e=>{pts.delete(e.pointerId);pinch=0;gd=null});
 $("#gx").addEventListener("wheel",e=>{e.preventDefault();const r=gx.getBoundingClientRect();zoomBy(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top)},{passive:false});
-let spin={y:0,p:0},lastT=0,dtA=16,SN=SKY.length,fq=0;
-(function loop(t){const dt=t-lastT;lastT=t;if(dt>0&&dt<200){dtA=dtA*.92+dt*.08;if(++fq>45){fq=0;if(dtA>27&&SN>2400)SN=Math.floor(SN*.8)}}
+let spin={y:0,p:0},lastT=0,dtA=16,SN=SKY.length,fq=0,desktopActive=!DESKTOP_WIDGET,lastWidgetFrame=0;
+if(DESKTOP_WIDGET&&window.qgScene)window.qgScene.onAmbientState(active=>{desktopActive=Boolean(active)});
+(function loop(t){if(DESKTOP_WIDGET&&!desktopActive){setTimeout(()=>requestAnimationFrame(loop),1000);return}if(DESKTOP_WIDGET&&t-lastWidgetFrame<33){requestAnimationFrame(loop);return}lastWidgetFrame=t;const dt=t-lastT;lastT=t;if(dt>0&&dt<200){dtA=dtA*.92+dt*.08;if(++fq>45){fq=0;if(dtA>27&&SN>2400)SN=Math.floor(SN*.8)}}
  if(!gd){gyaw+=spin.y;gpit+=spin.p;spin.y*=.95;spin.p*=.95;if(!reduce&&Math.abs(spin.y)<.002)gyaw+=.0004}
  gframe(reduce?0:t);requestAnimationFrame(loop)})(0);
 R();
@@ -333,4 +340,5 @@ $("#pbn").addEventListener("click",pbN);
 addEventListener("keydown",e=>{if(!PB.on)return;if(e.key==="ArrowLeft")PB.lk=1;if(e.key==="ArrowRight")PB.rk=1;if(e.key===" "){pbN();e.preventDefault()}});
 addEventListener("keyup",e=>{if(e.key==="ArrowLeft")PB.lk=0;if(e.key==="ArrowRight")PB.rk=0});
 </script><script src="./tasks.js"></script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js",{scope:"./"}).catch(()=>{}))}</script></body></html>
+
 

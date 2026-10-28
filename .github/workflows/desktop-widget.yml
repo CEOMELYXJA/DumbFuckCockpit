@@ -9,6 +9,12 @@ on:
     paths:
       - 'desktop/**'
       - '.github/workflows/desktop-widget.yml'
+      - 'index.html'
+      - 'tasks.js'
+      - 'tasks.css'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'icon.svg'
 
 permissions:
   contents: read

@@ -83,7 +83,7 @@ if (process.argv.includes("--qg-ambient-host")) {
       ? { x: Math.round(bounds.x), y: Math.round(bounds.y), width: 420, height: 740 } : null;
     return {
       side: next.side === "left" ? "left" : "right",
-      opacity: Math.max(0.62, Math.min(0.96, Number(next.opacity) || 0.82)),
+      opacity: Math.max(0.25, Math.min(1, Number(next.opacity) || 0.82)),
       motion: next.motion === "reduced" ? "reduced" : "measured",
       fieldEnabled: next.fieldEnabled !== false,
       startWithWindows: Boolean(next.startWithWindows),
@@ -142,7 +142,7 @@ if (process.argv.includes("--qg-ambient-host")) {
       ambientProcess = null;
     }
     setAmbientStatus("starting", "Démarrage du widget transparent…");
-    const profile = path.join(app.getPath("temp"), `QG-Desktop-Ambient-${process.pid}`);
+    const profile = path.join(app.getPath("userData"), "Cockpit-Profile");
     const args = app.isPackaged ? ["--qg-ambient-host"] : [path.resolve(__dirname, ".."), "--qg-ambient-host"];
     let child;
     try {
@@ -330,7 +330,7 @@ if (process.argv.includes("--qg-ambient-host")) {
 
   function trayMenu() {
     const menu = Menu.buildFromTemplate([
-      { label: "Ouvrir DumbFuckCockpit", click: openPanel },
+      { label: "Réglages du widget DumbFuckCockpit", click: openPanel },
       { label: "Réglages du widget", click: () => openPanel(true) },
       { label: settings.fieldEnabled ? "Masquer le widget transparent" : "Afficher le widget transparent", click: toggleAmbientField },
       { label: "Recréer le widget du bureau", enabled: settings.fieldEnabled, click: requestAmbientRebuild },

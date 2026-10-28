@@ -1,10 +1,10 @@
-# DumbFuckCockpit Widget 0.3.1
+# DumbFuckCockpit Widget 0.4.0
 
-Le widget de bureau s’appelle maintenant DumbFuckCockpit. Au lancement manuel, son panneau de réglages s’ouvre directement. Le bouton « ⚙ Réglages » reste visible, et le menu de l’icône près de l’horloge donne aussi accès aux préférences et à l’affichage du widget.
+Le widget affiche maintenant la carte 3D originale de l’application Chrome et ses treize univers. La version Windows reprend les fichiers du cockpit à la compilation; le compagnon ne présente plus un second gestionnaire de tâches ni une demande d’import JSON.
 
-La scène animée est transparente, placée derrière les icônes Windows et ne reçoit pas leurs clics. Le panneau indique si la couche a bien été attachée au bureau ou si Windows a bloqué son affichage. La palette reprend les tons sobres du cockpit web.
+La scène reste transparente, derrière les icônes, et laisse passer leurs clics. Le panneau sert uniquement à choisir le côté, régler la transparence et le mouvement, masquer le widget et activer son lancement avec Windows.
 
-Les tâches et préférences déjà enregistrées par QG Desktop 0.2.0 sont reprises depuis le même dossier local.
+La progression du cockpit Chrome reste dans Chrome. Le widget conserve son propre profil Windows. Les tâches et réglages déjà enregistrés par QG Desktop restent dans leur ancien dossier local.
 
-Compatible avec Windows 10 et Windows 11. Les tâches et réglages restent locaux au programme de bureau; les tâches peuvent être transférées depuis le site par export/import JSON. L’installateur n’est pas signé et Windows peut afficher un avertissement d’éditeur non vérifié.
+Compatible avec Windows 10 et Windows 11. L’installateur n’est pas signé et Windows peut afficher un avertissement d’éditeur non vérifié.
 

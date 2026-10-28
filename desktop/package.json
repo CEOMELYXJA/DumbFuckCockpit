@@ -1,6 +1,6 @@
 {
   "name": "qg-desktop-companion",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "description": "DumbFuckCockpit — widget spatial transparent pour le bureau Windows.",
   "author": "CEOMELYXJA",
@@ -9,7 +9,7 @@
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/generate-icons.cjs",
-    "package": "npm run icons && electron-builder --publish never --win nsis"
+    "package": "node scripts/prepare-widget.cjs && npm run icons && electron-builder --publish never --win nsis"
   },
   "dependencies": {
     "desktop-host": "file:./native"
@@ -24,6 +24,7 @@
     "artifactName": "DumbFuckCockpit-Widget-${version}-${arch}.${ext}",
     "directories": { "output": "dist" },
     "files": ["src/**/*", "assets/**/*", "package.json"],
+    "extraResources": [{ "from": "widget", "to": "widget", "filter": ["**/*"] }],
     "asar": true,
     "asarUnpack": ["**/*.node"],
     "electronLanguages": ["en-US", "fr"],

@@ -43,6 +43,17 @@ function monitorBounds(display) {
   };
 }
 
+function widgetBounds(display) {
+  const source = display.bounds;
+  const width = Math.max(1, Math.min(source.width, Math.round(source.width * 0.68)));
+  return {
+    x: snapshot.settings?.side === "left" ? source.x : source.x + source.width - width,
+    y: source.y,
+    width,
+    height: source.height
+  };
+}
+
 function chooseHost(hosts, display) {
   const wanted = monitorBounds(display);
   let best = null, bestScore = -1;
@@ -78,7 +89,8 @@ function notifyUnavailable(message) {
 }
 
 function createScene(display, desktopHost) {
-  const bounds = display.bounds;
+  const bounds = widgetBounds(display);
+  const displayZone = { ...display, bounds };
   const window = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     show: false, frame: false, transparent: true, backgroundColor: "#00000000",
@@ -92,11 +104,18 @@ function createScene(display, desktopHost) {
   });
   window.setIgnoreMouseEvents(true);
   window.setFocusable(false);
-  window.loadFile(path.join(__dirname, "scene.html"));
+  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  window.webContents.on("will-navigate", (event, url) => {
+    if (!url.startsWith("file:")) event.preventDefault();
+  });
+  const cockpitEntry = app.isPackaged
+    ? path.join(process.resourcesPath, "widget", "index.html")
+    : path.resolve(__dirname, "../../index.html");
+  window.loadFile(cockpitEntry, { query: { desktopWidget: "1" } });
   window.webContents.once("did-finish-load", () => {
     try {
       if (!nativeHost) throw new Error("Le module Windows de la couche arrière n’est pas disponible.");
-      nativeHost.attachToDesktop(window.getNativeWindowHandle(), desktopHost.handle, monitorBounds(display));
+      nativeHost.attachToDesktop(window.getNativeWindowHandle(), desktopHost.handle, monitorBounds(displayZone));
       window.showInactive();
       window.webContents.send("qg:scene-state", { categories: snapshot.categories, tasks: snapshot.tasks, settings: snapshot.settings });
       window.webContents.send("qg:ambient-active", false);
@@ -154,9 +173,10 @@ function checkShell() {
 process.on("message", (message) => {
   if (!message || typeof message !== "object") return;
   if (message.type === "snapshot" && message.payload && typeof message.payload === "object") {
+    const previousSide = snapshot.settings?.side;
     snapshot = message.payload;
     receivedSnapshot = true;
-    if (snapshot.settings?.fieldEnabled === false || !scenes.length) rebuildScenes();
+    if (snapshot.settings?.fieldEnabled === false || !scenes.length || previousSide !== snapshot.settings?.side) rebuildScenes();
     else broadcastState();
   } else if (message.type === "rebuild") {
     rebuildScenes();

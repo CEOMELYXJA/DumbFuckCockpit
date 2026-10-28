@@ -13,7 +13,7 @@ Le site fonctionne sans compilation. Le service worker vérifie le réseau avant
 
 ## Application Windows
 
-**[Télécharger le widget transparent DumbFuckCockpit pour Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest)** — le programme ouvre son panneau de réglages, place la scène derrière les icônes et ne bloque pas leurs clics. L’accès aux préférences est le bouton « ⚙ Réglages »; `Ctrl+Alt+Espace` est un raccourci secondaire.
+**[Télécharger le widget transparent DumbFuckCockpit pour Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest)** — il affiche la carte 3D originale et les treize univers du cockpit derrière les icônes. Le panneau ne sert qu’à régler le côté, la transparence et le mouvement; aucun JSON n’est requis pour afficher le widget. `Ctrl+Alt+Espace` ou le raccourci du menu Démarrer rouvre le panneau.
 
-L’application et le site gardent des sauvegardes séparées. Les tâches se déplacent par export et import JSON; le navigateur n’est jamais lu directement par l’application.
+Le widget Windows et l’application Chrome utilisent les mêmes fichiers visuels. Chrome garde sa progression dans son propre profil; le widget possède son profil Windows et ne synchronise pas encore les données enregistrées dans Chrome.
 

@@ -1,44 +1,35 @@
-# DumbFuckCockpit Widget — scène transparente Windows
+# Widget transparent DumbFuckCockpit pour Windows
 
-DumbFuckCockpit Widget ajoute une scène spatiale animée et transparente directement au bureau Windows. Elle reste derrière les icônes et laisse leurs clics intacts. Au lancement manuel du programme, le panneau de réglages s’ouvre pour montrer que l’application a bien démarré. La version 0.3.1 garde le même dossier de tâches que l’ancienne application QG Desktop.
+La version Windows affiche **la carte 3D originale de l’application Chrome** sur le bureau. Le paquet reprend `index.html`, `tasks.js`, `tasks.css` et les autres ressources du cockpit à chaque publication. La scène conserve les treize univers, le style et l’animation du site.
 
-## La règle d’interface
+## Utilisation
 
-**La couche 01 ne prend jamais les clics.** Un processus de rendu dédié reçoit une fenêtre Electron transparente par écran. Le petit module Win32 cherche l’hôte wallpaper `WorkerW`, place cette fenêtre dans la couche de fond d’Explorer et la configure comme non activante. L’isolement évite que le changement de contexte DPI qu’impose parfois un parent Explorer ne déforme la fenêtre de commande. Explorer conserve donc la priorité d’affichage de ses icônes et de leurs libellés. Si cette hôte n’est pas trouvée ou si la greffe échoue, la scène est détruite au lieu de retomber sur une fenêtre toujours au premier plan.
+1. Installez **DumbFuckCockpit Widget** depuis [la dernière version Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest).
+2. Lancez le raccourci du menu Démarrer. Le panneau indique si la couche transparente est active.
+3. Choisissez le côté opposé à vos icônes et ajustez la transparence ou le mouvement.
+4. Fermez le panneau avec **×**. La carte reste animée derrière les icônes et leurs clics continuent de fonctionner.
 
-**La couche 02 est la surface de commande.** Le bouton « ⚙ Réglages » ouvre les préférences du widget. `Ctrl+Alt+Espace` ouvre le panneau sur l’écran du pointeur. Le menu de l’icône DumbFuckCockpit près de l’horloge donne aussi accès aux réglages, à l’affichage et à la reconstruction de la couche après un redémarrage d’Explorer. Fermer le panneau le masque sans arrêter le widget.
+Pour rouvrir les réglages, relancez le même raccourci ou utilisez `Ctrl+Alt+Espace`. Le bouton **Ouvrir mon cockpit Chrome** ouvre l’application que vous utilisez déjà.
 
-La carte canvas reprend les treize univers du cockpit. Elle n’affiche pas de fausses tâches : les volumes et le noyau utilisent uniquement le fichier local. Le mouvement est plafonné à environ 30 images/s lorsque le bureau est actif, passe à 1 image/s en mouvement réduit et se suspend quand une autre fenêtre est au premier plan ou quand Windows suspend le processus.
+**Aucun univers JSON n’a à être importé pour afficher le widget.** Le compagnon Windows ne présente plus de deuxième gestionnaire de tâches. La progression enregistrée par Chrome reste dans le profil Chrome; le widget utilise son propre profil Windows.
 
-Le statut du panneau indique si le widget est visible, en démarrage, masqué ou bloqué par Windows. Si la couche ne peut pas être attachée derrière les icônes, elle reste masquée afin de ne pas intercepter leurs clics.
+## Comportement du bureau
 
-## Reprise des tâches
+- Le code de la carte est le même que celui publié sur GitHub Pages; chaque nouvel installateur intègre la version du site disponible lors de sa compilation.
+- La zone du widget occupe le côté choisi de chaque écran. Les fenêtres restent derrière les icônes et la scène ne capte aucun clic.
+- L’animation tourne à environ 30 images/s lorsque le bureau est visible, ralentit en mouvement réduit et se met en veille lorsque le bureau est couvert.
+- Le lancement avec Windows est facultatif et désactivé par défaut.
+- L’état indique si Windows a accepté la couche du bureau. Si Explorer ne fournit pas de surface compatible, la scène reste masquée afin de préserver les clics.
 
-- Import direct de `.txt`, `.md`, `.markdown` et des sauvegardes JSON du cockpit.
-- Aperçu et comptage des doublons avant ajout; 500 tâches au maximum.
-- Les en-têtes de catégories ne sont reconnus que par nom ou alias exact. Un titre ambigu reste « À trier »; un en-tête inconnu est gardé dans l’aperçu comme élément à vérifier.
-- Une tâche peut recevoir un univers, une durée, une priorité et un critère « terminé quand… ». Aucun texte importé ne remplace une tâche existante.
-- Le stockage est local à `userData/qg/tasks.json`; les remplacements de fichier sont atomiques. L’export produit le format `qg-personal-tasks` que le site sait réimporter.
-- Le site DumbFuckCockpit dans Chrome et le widget Windows gardent des stockages séparés. Les tâches circulent entre les deux par export/import JSON; le programme Windows ne lit pas le stockage du navigateur.
+## Développement et publication
 
-## Démarrage local
-
-Depuis ce dossier, avec Node.js 24 et les outils C++ de Visual Studio Build Tools installés :
+Depuis le dossier `desktop`, avec Node.js 24 et Visual Studio Build Tools :
 
 ```powershell
 npm install
 npm start
+npm run package
 ```
 
-L’application cible Windows 10 et 11. Le lancement avec Windows reste désactivé par défaut et peut être activé dans Préférences. Les règles Electron refusent les navigations distantes dans les fenêtres locales; seul le bouton explicite « Ouvrir le cockpit web » ouvre le site dans le navigateur.
-
-## Paquet Windows
-
-La tâche GitHub Actions `DumbFuckCockpit Widget package` produit un installateur NSIS Windows. Le dernier installateur est conservé dans [Téléchargements](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest); l’artefact temporaire de compilation reste disponible 30 jours. Le paquet n’est pas signé; Windows peut afficher l’avertissement d’éditeur non vérifié.
-
-## Limites à résoudre avant diffusion
-
-Explorer n’offre pas d’API publique stable pour la surface `WorkerW`. Le mécanisme de création d’hôte varie selon la version et la configuration du bureau; la couche Win32 est volontairement isolée dans `native/` et revérifiée périodiquement après redémarrage d’Explorer. Si la surface de fond ne peut pas être établie, le widget reste masqué pour protéger les clics sur les icônes. Son état est maintenant affiché dans le panneau.
-
-Les nouvelles versions du programme Windows ne s’installent pas automatiquement avec les mises à jour du site. Téléchargez le dernier installateur et lancez-le pour remplacer le programme.
+Le paquet Windows est construit par GitHub Actions et publié dans [Téléchargements](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest). Les mises à jour du site ne modifient pas une installation existante : installez la dernière version Windows pour actualiser son affichage. L’installateur n’est pas signé; Windows peut afficher un avertissement d’éditeur non vérifié.
 
