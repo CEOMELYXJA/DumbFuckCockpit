@@ -1,5 +1,47 @@
-const CACHE_NAME="qg-cockpit-shell-v1";
-const SHELL=["./","./index.html","./manifest.webmanifest","./tasks.js","./tasks.css","./icon.svg"];
-self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
-self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("qg-cockpit-shell-")&&key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
-self.addEventListener("fetch",event=>{const req=event.request;if(req.method!=="GET")return;const url=new URL(req.url);if(url.origin!==self.location.origin)return;if(req.mode==="navigate"){event.respondWith(fetch(req).then(response=>{if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.put(req,copy)))}return response}).catch(()=>caches.match(req).then(cached=>cached||caches.match("./index.html"))));return}event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(response=>{if(response.ok&&response.type==="basic"){const copy=response.clone();event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.put(req,copy)))}return response})))});
+const CACHE_NAME = "qg-cockpit-shell-v2";
+const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./tasks.js", "./tasks.css", "./icon.svg"];
+
+self.addEventListener("install", function (event) {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function (cache) { return cache.addAll(SHELL); })
+      .then(function () { return self.skipWaiting(); })
+  );
+});
+
+self.addEventListener("activate", function (event) {
+  event.waitUntil(
+    caches.keys()
+      .then(function (keys) {
+        return Promise.all(keys.filter(function (key) {
+          return key.indexOf("qg-cockpit-shell-") === 0 && key !== CACHE_NAME;
+        }).map(function (key) { return caches.delete(key); }));
+      })
+      .then(function () { return self.clients.claim(); })
+  );
+});
+
+self.addEventListener("fetch", function (event) {
+  const request = event.request;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Always check the network first so a published update is visible immediately.
+  event.respondWith(
+    fetch(request).then(function (response) {
+      if (response.ok && response.type === "basic") {
+        return caches.open(CACHE_NAME).then(function (cache) {
+          return cache.put(request, response.clone()).then(function () { return response; });
+        });
+      }
+      return response;
+    }).catch(function () {
+      return caches.match(request).then(function (cached) {
+        if (cached) return cached;
+        if (request.mode === "navigate") return caches.match("./index.html");
+        return Response.error();
+      });
+    })
+  );
+});

@@ -1,57 +1,393 @@
-(function(){
-"use strict";
-if(!Array.isArray(S.userTasks))S.userTasks=[];
-if(typeof S.showSuggestions!=="boolean")S.showSuggestions=true;
-const states={inbox:"À trier",todo:"À faire",doing:"En cours",done:"Terminée",archived:"Archivée"};
-const minutes=[5,15,30,60,90];
-function norm(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
-function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]})}
-function newId(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():"qg-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9)}
-function validCat(x){return!!Z.find(function(z){return z.id===x})}
-function catName(x){const z=Z.find(function(a){return a.id===x});return z?z.n:"À trier"}
-function catFrom(label){const n=norm(label),a={tat:["boutique","tatouage","tatouages","studio de tatouage","tattoo"],ate:["atelier 3d","3d","impression 3d","imprimante 3d"],dro:["studio drone","drone","video drone","videos drone"],gar:["garage trottinette","trottinette","scooter","garage scooter"],lab:["labo code","code","programmation","codage","developpement"],ban:["banque","finance","finances","revenus","argent"],cor:["corps","sante"],mai:["maison connectee","maison","domotique"],cry:["crypto","cryptomonnaie","cryptomonnaies"],vr:["vr et ar","vr","ar","realite virtuelle","realite augmentee"],arc:["arcade","game boy","jeux video"],soc:["contenu et reseaux","reseaux sociaux","contenu","reseaux","social"],app:["design visuel","design","apparence","interface","esthetique"]};for(const z of Z){if(norm(z.n)===n||(a[z.id]||[]).some(function(x){return norm(x)===n}))return z.id}return null}
-function safeStatus(x){return Object.prototype.hasOwnProperty.call(states,x)?x:"inbox"}
-function safeTask(t){const cat=validCat(t.category)?t.category:null;return{id:/^[a-zA-Z0-9_-]{1,80}$/.test(String(t.id||""))?String(t.id):newId(),title:String(t.title||"").trim().slice(0,180),category:cat,status:safeStatus(t.status),minutes:minutes.indexOf(+t.minutes)>=0?+t.minutes:15,priority:[1,2,3].indexOf(+t.priority)>=0?+t.priority:2,doneWhen:String(t.doneWhen||"").slice(0,300),source:String(t.source||"").slice(0,30)}}
-S.userTasks=S.userTasks.filter(function(t){return t&&String(t.title||"").trim()}).slice(0,1000).map(safeTask);
-const el=function(x){return document.getElementById(x)};
-let pending=[],priorFocus=null;
-function makeTask(t){return safeTask({id:newId(),title:t.title,category:t.category,status:t.status||((t.category)?"todo":"inbox"),minutes:t.minutes||15,priority:t.priority||2,doneWhen:t.doneWhen||"",source:t.source||"txt"})}
-function parseText(text){let section=null,items=[],fenced=false;const headers=["tache","taches","liste","liste de taches","a faire","todo","to do","priorites","objectifs","tasks"];String(text||"").split(/\r?\n/).forEach(function(line){let s=line.trim();if(!s)return;if(/^\x60{3}/.test(s)){fenced=!fenced;return}if(fenced||/^[-=_*]{3,}$/.test(s))return;const h=s.match(/^#{1,6}\s+(.+?)\s*#*$/);if(h){section=catFrom(h[1].replace(/[:：]\s*$/,""));return}const exact=catFrom(s.replace(/[:：]\s*$/,""));if(exact){section=exact;return}if(headers.indexOf(norm(s).replace(/:$/,""))>=0){section=null;return}let done=false;const check=s.match(/^(?:[-*+•]\s*)?\[([ xX])\]\s*(.*)$/);if(check){done=/x/i.test(check[1]);s=check[2]}else{const mark=s.match(/^([☐☑✅])\s*(.*)$/);if(mark){done=mark[1]!=="☐";s=mark[2]}s=s.replace(/^(?:[-*+•]|\d+[.)])\s*/,"")}let category=section;const tag=s.match(/^\[([^\]]+)\]\s*(.+)$/);if(tag){const c=catFrom(tag[1]);if(c){category=c;s=tag[2]}}s=s.replace(/^(?:[-*+•]|\d+[.)])\s*/,"").trim().replace(/\s+/g," ");if(s)items.push(makeTask({title:s,category:category,status:done?"done":category?"todo":"inbox",source:"txt"}))});return items.slice(0,500)}
-function categoryOptions(selected){return'<option value="">À trier</option>'+Z.map(function(z){return'<option value="'+esc(z.id)+'"'+(selected===z.id?" selected":"")+'>'+esc(z.i+" "+z.n)+'</option>'}).join("")}
-function statusOptions(selected){return Object.keys(states).map(function(k){return'<option value="'+k+'"'+(selected===k?" selected":"")+'>'+esc(states[k])+'</option>'}).join("")}
-function sourceName(s){return s==="txt"?"importée .txt":s==="sauvegarde"?"sauvegarde":"ajoutée par vous"}
-function renderList(){const list=el("qgTaskList"),filter=el("qgTaskFilter").value,search=norm(el("qgTaskSearch").value),order={inbox:0,todo:1,doing:2,done:3,archived:4};let items=S.userTasks.slice().sort(function(a,b){return order[a.status]-order[b.status]||a.priority-b.priority||a.title.localeCompare(b.title,"fr")});items=items.filter(function(t){const matches=filter==="all"||filter==="active"&&(t.status==="todo"||t.status==="doing")||filter===t.status;return matches&&(!search||norm(t.title+" "+t.doneWhen+" "+catName(t.category)).indexOf(search)>=0)});if(!items.length){list.innerHTML='<p class="qg-empty">'+(S.userTasks.length?"Aucune tâche ne correspond à ce filtre.":"Votre liste est vide. Importez le .txt en une fois; les lignes inconnues resteront à trier.")+'</p>';return}list.innerHTML=items.map(function(t){const id=esc(t.id);return'<article class="qg-task-card"><div class="qg-task-fields"><label>Action<input maxlength="180" data-task-field="title" data-task-id="'+id+'" value="'+esc(t.title)+'"></label><label>Univers<select data-task-field="category" data-task-id="'+id+'">'+categoryOptions(t.category)+'</select></label><label>État<select data-task-field="status" data-task-id="'+id+'">'+statusOptions(t.status)+'</select></label><label>Durée<select data-task-field="minutes" data-task-id="'+id+'">'+minutes.map(function(n){return'<option value="'+n+'"'+(+t.minutes===n?" selected":"")+'>'+ (n<60?n+" min":(n/60)+" h")+'</option>'}).join("")+'</select></label><label>Priorité<select data-task-field="priority" data-task-id="'+id+'"><option value="1"'+(t.priority===1?" selected":"")+'>Haute</option><option value="2"'+(t.priority===2?" selected":"")+'>Normale</option><option value="3"'+(t.priority===3?" selected":"")+'>Peut attendre</option></select></label></div><label class="qg-detail">Résultat clair (facultatif)<textarea maxlength="300" data-task-field="doneWhen" data-task-id="'+id+'" placeholder="Je saurai que c’est terminé quand…">'+esc(t.doneWhen)+'</textarea></label><div class="qg-task-actions"><span class="qg-task-origin">'+esc(catName(t.category))+' · '+esc(states[t.status])+' · '+esc(sourceName(t.source))+'</span>'+(t.status==="archived"?'<button type="button" data-task-restore="'+id+'">Réactiver</button>':'<button type="button" data-task-archive="'+id+'">Archiver</button>')+'</div></article>'}).join("")}
-function renderManager(){const current=S.userTasks.filter(function(t){return t.status!=="archived"}).length,inbox=S.userTasks.filter(function(t){return t.status==="inbox"}).length,active=S.userTasks.filter(function(t){return t.status==="todo"||t.status==="doing"}).length,done=S.userTasks.filter(function(t){return t.status==="done"}).length;el("qgTaskCounts").textContent=current+" active"+(current===1?"":"s")+" · "+active+" à faire/en cours · "+inbox+" à trier · "+done+" terminée"+(done===1?"":"s");el("qgShowSuggestions").checked=S.showSuggestions!==false;el("qgTaskNewCategory").innerHTML=categoryOptions(null);renderList()}
-function openManager(){priorFocus=document.activeElement;el("qgTaskShade").hidden=false;renderManager();el("qgTaskManager").focus()}
-function closeManager(){el("qgTaskShade").hidden=true;if(priorFocus&&priorFocus.focus)priorFocus.focus()}
-function decoratePanel(){const panel=el("pan"),box=panel&&panel.querySelector(".pb");if(!box)return;const qs=box.querySelector(".qs");if(qs){qs.hidden=S.showSuggestions===false;const intro=qs.previousElementSibling;if(intro&&intro.classList.contains("quest-intro"))intro.hidden=S.showSuggestions===false}const old=box.querySelector(".qg-personal-quests");if(old)old.remove();const z=Z.find(function(a){return a.id===S.sel});if(!z)return;const items=S.userTasks.filter(function(t){return t.category===z.id&&t.status!=="archived"});const section=document.createElement("section");section.className="qg-personal-quests";const heading=document.createElement("h3");heading.textContent="Mes tâches personnelles";section.appendChild(heading);if(!items.length){const p=document.createElement("p");p.className="qg-personal-note";p.textContent="Aucune tâche personnelle dans cet univers pour le moment.";section.appendChild(p)}else{const list=document.createElement("div");list.className="qg-personal-list";items.forEach(function(t){const b=document.createElement("button");b.type="button";b.className="q "+(t.status==="done"?"d":"");b.setAttribute("role","checkbox");b.setAttribute("aria-checked",String(t.status==="done"));b.setAttribute("aria-label",(t.status==="done"?"Rouvrir : ":"Terminer : ")+t.title);b.dataset.qgTaskComplete=t.id;const mark=document.createElement("span");mark.className="bx";mark.textContent=t.status==="done"?"✓":"";const title=document.createElement("span");title.textContent=t.title;const meta=document.createElement("em");meta.textContent=(t.minutes||15)+" min";b.append(mark,title,meta);list.appendChild(b);if(t.doneWhen){const note=document.createElement("small");note.className="qg-personal-note";note.textContent="Fini quand : "+t.doneWhen;list.appendChild(note)}});section.appendChild(list)}const manage=document.createElement("button");manage.type="button";manage.textContent="Gérer / importer des tâches";manage.addEventListener("click",openManager);section.appendChild(manage);const stats=box.querySelector(".sg");if(stats)box.insertBefore(section,stats);else box.appendChild(section)}
-const originalRender=R;R=function(){originalRender();decoratePanel()};
-const originalGl=gl;gl=function(){const rows=originalGl(),defaults=S.showSuggestions===false?0:Z.reduce(function(a,z){return a+z.q.length},0),active=S.userTasks.filter(function(t){return t.status!=="archived"}),doneDefault=S.showSuggestions===false?0:Object.keys(S.done.i).filter(function(k){return!!S.done.i[k]}).length,doneUser=active.filter(function(t){return t.status==="done"}).length,total=defaults+active.length,done=doneDefault+doneUser;rows[1]=["Quêtes",total?done/total:0,done+"/"+total,"#8be36a"];return rows};
-const originalDraw=questDraw;questDraw=function(){if(S.showSuggestions!==false)originalDraw()};
-el("qgOpenTasks").addEventListener("click",openManager);
-el("qgCloseTasks").addEventListener("click",closeManager);
-el("qgInstallHintClose").addEventListener("click",function(){el("qgInstallHint").hidden=true});
-el("qgInstallApp").addEventListener("click",async function(){const hint=el("qgInstallHint"),message=hint.querySelector("span");if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone){message.textContent="Le QG est déjà ouvert en mode application. Vous pouvez l’épingler à la barre des tâches depuis Windows.";hint.hidden=false;return}if(window.qgInstallPrompt){const prompt=window.qgInstallPrompt;window.qgInstallPrompt=null;await prompt.prompt();const choice=await prompt.userChoice;message.textContent=choice.outcome==="accepted"?"Le QG est en cours d’installation.":"Installation annulée. Réessayez depuis le menu du navigateur.";hint.hidden=false;return}message.textContent="Dans Microsoft Edge, ouvrez ⋯ > Applications > Installer ce site comme une application. Le QG s’ouvrira ensuite dans une fenêtre dédiée.";hint.hidden=false});
-window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.qgInstallPrompt=e});
-window.addEventListener("appinstalled",function(){el("qgInstallHint").querySelector("span").textContent="Installation terminée. Vous pouvez lancer le QG depuis Windows.";el("qgInstallHint").hidden=false});
-el("qgTaskShade").addEventListener("click",function(e){if(e.target===el("qgTaskShade"))closeManager()});
-el("qgTaskManager").addEventListener("keydown",function(e){if(e.key==="Escape"){closeManager();return}if(e.key!=="Tab")return;const f=Array.from(el("qgTaskManager").querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary')).filter(function(x){return x.offsetParent!==null});if(!f.length)return;if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&document.activeElement===f[f.length-1]){e.preventDefault();f[0].focus()}});
-el("qgTaskAddForm").addEventListener("submit",function(e){e.preventDefault();const title=el("qgTaskNewTitle").value.trim();if(!title)return;const category=el("qgTaskNewCategory").value||null;S.userTasks.unshift(makeTask({title:title,category:category,status:category?"todo":"inbox",minutes:+el("qgTaskNewMinutes").value,source:"personnelle"}));save();el("qgTaskNewTitle").value="";renderManager();R();toast("Tâche ajoutée")});
-el("qgTaskFilter").addEventListener("change",renderList);
-el("qgTaskSearch").addEventListener("input",renderList);
-el("qgShowSuggestions").addEventListener("change",function(e){S.showSuggestions=e.target.checked;save();R();renderManager()});
-el("qgTaskList").addEventListener("change",function(e){const f=e.target.closest("[data-task-field]");if(!f)return;const t=S.userTasks.find(function(x){return x.id===f.dataset.taskId});if(!t)return;const k=f.dataset.taskField;if(k==="title"){const v=f.value.trim();if(v)t.title=v.slice(0,180)}else if(k==="category"){t.category=validCat(f.value)?f.value:null;if(t.category&&t.status==="inbox")t.status="todo"}else if(k==="status")t.status=safeStatus(f.value);else if(k==="minutes")t.minutes=minutes.indexOf(+f.value)>=0?+f.value:15;else if(k==="priority")t.priority=[1,2,3].indexOf(+f.value)>=0?+f.value:2;else if(k==="doneWhen")t.doneWhen=f.value.slice(0,300);save();renderManager();R()});
-el("qgTaskList").addEventListener("click",function(e){const archive=e.target.closest("[data-task-archive]"),restore=e.target.closest("[data-task-restore]"),b=archive||restore;if(!b)return;const t=S.userTasks.find(function(x){return x.id===(archive?b.dataset.taskArchive:b.dataset.taskRestore)});if(!t)return;t.status=archive?"archived":"todo";save();renderManager();R()});
-function importError(message){pending=[];el("qgImportPreview").hidden=true;el("qgImportNotice").textContent=message}
-function preview(items,kind){pending=items;const box=el("qgImportPreview"),rows=el("qgImportRows");rows.replaceChildren();if(!items.length){box.hidden=true;el("qgImportNotice").textContent="Aucune tâche lisible trouvée. Chaque tâche doit occuper une ligne.";return}const counts={};items.forEach(function(t){const name=catName(t.category);counts[name]=(counts[name]||0)+1});el("qgImportSummary").textContent=items.length+" tâche"+(items.length===1?"":"s")+" trouvée"+(items.length===1?"":"s")+" dans "+kind+" · "+Object.keys(counts).map(function(k){return k+": "+counts[k]}).join(" · ");items.slice(0,12).forEach(function(t){const li=document.createElement("li");li.textContent=t.title+" — ";const em=document.createElement("em");em.textContent=catName(t.category);li.appendChild(em);rows.appendChild(li)});if(items.length>12){const li=document.createElement("li");li.textContent="… et "+(items.length-12)+" autre"+(items.length===13?"":"s");rows.appendChild(li)}box.hidden=false;el("qgImportNotice").textContent="Vérifiez l’aperçu. Les lignes « À trier » ne reçoivent aucune catégorie automatiquement.";el("qgApplyImport").textContent="Ajouter "+items.length+" tâche"+(items.length===1?"":"s")}
-function parseBackup(data){if(!data||data.format!=="qg-cockpit-tasks"||data.version!==1||!Array.isArray(data.tasks))throw new Error("Ce fichier n’est pas une sauvegarde QG reconnue.");return data.tasks.slice(0,500).map(function(t){return makeTask({title:String(t.title||"").trim().slice(0,180),category:validCat(t.category)?t.category:null,status:safeStatus(t.status),minutes:t.minutes,priority:t.priority,doneWhen:String(t.doneWhen||"").slice(0,300),source:"sauvegarde"})}).filter(function(t){return t.title})}
-function previewText(){preview(parseText(el("qgTaskPaste").value),"texte")}
-el("qgPreviewImport").addEventListener("click",previewText);
-el("qgTaskFile").addEventListener("change",async function(e){const file=e.target.files&&e.target.files[0];if(!file)return;if(file.size>1000000){importError("Le fichier dépasse 1 Mo. Copiez seulement la liste de tâches.");e.target.value="";return}try{const text=await file.text();if(/\.json$/i.test(file.name))preview(parseBackup(JSON.parse(text)),"sauvegarde JSON");else{el("qgTaskPaste").value=text;previewText()}}catch(error){importError(error&&error.message?error.message:"Impossible de lire ce fichier.")}e.target.value=""});
-el("qgApplyImport").addEventListener("click",function(){if(!pending.length)return;const seen=new Set(S.userTasks.map(function(t){return norm(t.title)}));let added=0,duplicates=0;pending.forEach(function(t){const title=String(t.title||"").trim().slice(0,180),key=norm(title);if(!title)return;if(seen.has(key)){duplicates++;return}seen.add(key);S.userTasks.push(safeTask(Object.assign({},t,{id:newId(),title:title})));added++});pending=[];el("qgImportPreview").hidden=true;el("qgImportNotice").textContent=added+" tâche"+(added===1?"":"s")+" ajoutée"+(added===1?"":"s")+(duplicates?" · "+duplicates+" doublon"+(duplicates===1?"":"s")+" ignoré"+(duplicates===1?"":"s"):"")+" · Rien n’a été remplacé.";save();renderManager();R();toast(added+" tâche"+(added===1?"":"s")+" importée"+(added===1?"":"s"))});
-el("qgCancelImport").addEventListener("click",function(){pending=[];el("qgImportPreview").hidden=true;el("qgImportNotice").textContent="Import annulé; aucune tâche n’a été ajoutée."});
-el("qgExportTasks").addEventListener("click",function(){const data={format:"qg-cockpit-tasks",version:1,exportedAt:new Date().toISOString(),tasks:S.userTasks};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="qg-taches-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)});
-el("qgTaskShade").addEventListener("click",function(e){const b=e.target.closest("[data-qg-task-complete]");if(!b)return;const t=S.userTasks.find(function(x){return x.id===b.dataset.qgTaskComplete});if(!t)return;t.status=t.status==="done"?"todo":"done";save();R();if(!el("qgTaskShade").hidden)renderManager()});
-renderManager();
-R();
+(function () {
+  "use strict";
+  // This panel owns its UI and storage. It never replaces the cockpit's renderer.
+  const STORAGE_KEY = "qg-personal-tasks-v2";
+  const LEGACY_KEY = "qg-v3";
+  const LIMIT = 500;
+  const CATEGORIES = [
+    ["tat", "Boutique", "🖋️", ["tatouage", "tatouages", "studio de tatouage", "tattoo"]],
+    ["ate", "Atelier 3D", "🖨️", ["3d", "impression 3d", "imprimante 3d"]],
+    ["dro", "Studio drone", "🚁", ["drone", "video drone", "videos drone"]],
+    ["gar", "Garage trottinette", "🛴", ["trottinette", "scooter", "garage scooter"]],
+    ["lab", "Labo code", "💻", ["code", "programmation", "codage", "developpement"]],
+    ["ban", "Banque", "💰", ["finance", "finances", "revenus", "argent"]],
+    ["cor", "Corps", "🔋", ["sante", "santé"]],
+    ["mai", "Maison connectée", "🏠", ["maison", "domotique"]],
+    ["cry", "Crypto", "🪙", ["cryptomonnaie", "cryptomonnaies"]],
+    ["vr", "VR et AR", "🥽", ["vr", "ar", "realite virtuelle", "realite augmentee"]],
+    ["arc", "Arcade", "🕹️", ["game boy", "jeux video"]],
+    ["soc", "Contenu et réseaux", "📣", ["reseaux sociaux", "contenu", "reseaux", "social"]],
+    ["app", "Design visuel", "🎨", ["design", "apparence", "interface", "esthetique"]]
+  ];
+  const STATUSES = { inbox: "À trier", todo: "À faire", doing: "En cours", done: "Terminée", archived: "Archivée" };
+  const DURATIONS = [5, 15, 30, 60, 90];
+
+  function normalizeText(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  function makeId() {
+    return window.crypto && crypto.randomUUID ? crypto.randomUUID() : "qg-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 9);
+  }
+  function validCategory(id) { return CATEGORIES.some(function (item) { return item[0] === id; }); }
+  function categoryName(id) {
+    const item = CATEGORIES.find(function (entry) { return entry[0] === id; });
+    return item ? item[2] + " " + item[1] : "À trier";
+  }
+  function categoryFrom(label) {
+    const wanted = normalizeText(label);
+    const item = CATEGORIES.find(function (entry) {
+      return normalizeText(entry[1]) === wanted || entry[3].some(function (alias) { return normalizeText(alias) === wanted; });
+    });
+    return item ? item[0] : null;
+  }
+  function cleanTask(task) {
+    task = task || {};
+    const category = validCategory(task.category) ? task.category : null;
+    const status = Object.prototype.hasOwnProperty.call(STATUSES, task.status) ? task.status : (category ? "todo" : "inbox");
+    return {
+      id: /^[a-zA-Z0-9_-]{1,80}$/.test(String(task.id || "")) ? String(task.id) : makeId(),
+      title: String(task.title || "").trim().slice(0, 180),
+      category: category,
+      status: status,
+      minutes: DURATIONS.indexOf(+task.minutes) >= 0 ? +task.minutes : 15,
+      priority: [1, 2, 3].indexOf(+task.priority) >= 0 ? +task.priority : 2,
+      doneWhen: String(task.doneWhen || "").slice(0, 300),
+      source: String(task.source || "personnelle").slice(0, 30)
+    };
+  }
+  function loadTasks() {
+    try {
+      const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (current && Array.isArray(current.tasks)) return current.tasks.map(cleanTask).filter(function (task) { return task.title; });
+    } catch (error) {}
+    // Copy tasks from the previous trial without changing or deleting the cockpit's saved state.
+    try {
+      const previous = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null");
+      if (previous && Array.isArray(previous.userTasks)) return previous.userTasks.map(cleanTask).filter(function (task) { return task.title; });
+    } catch (error) {}
+    return [];
+  }
+  function storeTasks() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ format: "qg-personal-tasks", version: 2, tasks: tasks }));
+      return true;
+    } catch (error) { return false; }
+  }
+
+  const root = document.createElement("div");
+  root.id = "qgToolsRoot";
+  root.innerHTML =
+    '<div id="qgToolbar" aria-label="Outils du cockpit">' +
+      '<button id="qgOpenTasks" type="button" aria-haspopup="dialog" aria-controls="qgTaskManager">☷ Mes tâches</button>' +
+      '<button id="qgInstallApp" type="button" aria-describedby="qgInstallHint">⇩ Installer</button>' +
+      '<div id="qgInstallHint" role="status" hidden><span></span><button id="qgInstallHintClose" type="button" aria-label="Fermer le conseil">✕</button></div>' +
+    '</div>' +
+    '<div id="qgTaskShade" hidden>' +
+      '<section id="qgTaskManager" role="dialog" aria-modal="true" aria-labelledby="qgTaskTitle" tabindex="-1">' +
+        '<header class="qg-head"><div><p class="qg-kicker">QG · ORGANISATION PERSONNELLE</p><h2 id="qgTaskTitle">Mes tâches</h2>' +
+          '<p class="qg-intro">Importez votre liste en une fois. Chaque tâche reste modifiable et rien ne sera classé au hasard.</p></div>' +
+          '<button id="qgCloseTasks" type="button" aria-label="Fermer Mes tâches">✕</button></header>' +
+        '<form id="qgTaskAddForm" class="qg-add">' +
+          '<label class="qg-grow">Nouvelle tâche<input id="qgTaskNewTitle" maxlength="180" placeholder="Ex. Confirmer le rendez-vous avec…" required></label>' +
+          '<label>Univers<select id="qgTaskNewCategory"></select></label>' +
+          '<label>Durée<select id="qgTaskNewMinutes"><option value="5">5 min</option><option value="15" selected>15 min</option><option value="30">30 min</option><option value="60">1 h</option><option value="90">1 h 30</option></select></label>' +
+          '<button class="qg-primary" type="submit">＋ Ajouter</button><p class="qg-hint">Classement facultatif : ce qui est incertain reste « À trier ».</p></form>' +
+        '<details class="qg-import"><summary>Importer sans tout retaper : .txt, .md ou sauvegarde .json</summary>' +
+          '<p>Prévisualisez les lignes avant de les ajouter. Les tâches existantes ne seront jamais remplacées.</p>' +
+          '<label class="qg-file-label" for="qgTaskFile">Choisir un fichier texte ou une sauvegarde</label>' +
+          '<input id="qgTaskFile" type="file" accept=".txt,.md,.markdown,.json,text/plain,application/json">' +
+          '<label for="qgTaskPaste">Ou coller le texte ici</label>' +
+          '<textarea id="qgTaskPaste" rows="5" placeholder="## Tatouage&#10;- Répondre à la cliente pour confirmer la date&#10;&#10;## Atelier 3D&#10;- Photographier le support terminé"></textarea>' +
+          '<div class="qg-actions"><button id="qgPreviewImport" type="button">Prévisualiser</button><button id="qgExportTasks" type="button">Télécharger une copie (.json)</button></div>' +
+          '<div id="qgImportPreview" class="qg-preview" hidden aria-live="polite"><h3>Aperçu avant ajout</h3><p id="qgImportSummary"></p><ul id="qgImportRows"></ul>' +
+            '<div class="qg-actions"><button id="qgApplyImport" type="button" class="qg-primary">Ajouter ces tâches</button><button id="qgCancelImport" type="button">Annuler</button></div></div>' +
+          '<p id="qgImportNotice" class="qg-notice" role="status" aria-live="polite"></p></details>' +
+        '<section class="qg-list-section" aria-labelledby="qgListHeading">' +
+          '<div class="qg-list-head"><div><h3 id="qgListHeading">Votre liste</h3><p id="qgTaskCounts" class="qg-hint"></p></div></div>' +
+          '<div class="qg-tools"><label class="qg-grow">Rechercher<input id="qgTaskSearch" type="search" placeholder="Nom, résultat attendu…"></label>' +
+            '<label>Afficher<select id="qgTaskFilter"><option value="active">À trier, à faire et en cours</option><option value="inbox">À trier</option><option value="done">Terminées</option><option value="archived">Archivées</option><option value="all">Tout</option></select></label></div>' +
+          '<p class="qg-local-note">Les tâches sont enregistrées dans ce navigateur. La progression du cockpit reste séparée. Exportez une copie pour la garder.</p>' +
+          '<div id="qgTaskList" class="qg-task-list"></div></section><p id="qgFeedback" class="qg-feedback" role="status" aria-live="polite"></p></section></div>';
+  document.body.appendChild(root);
+
+  const byId = function (id) { return document.getElementById(id); };
+  const shade = byId("qgTaskShade");
+  const list = byId("qgTaskList");
+  const legacySaved = (function () {
+    if (localStorage.getItem(STORAGE_KEY)) return false;
+    try {
+      const data = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null");
+      return !!(data && Array.isArray(data.userTasks) && data.userTasks.length);
+    } catch (error) { return false; }
+  })();
+  let tasks = loadTasks();
+  let pending = [];
+  let previousFocus = null;
+  if (legacySaved && tasks.length) storeTasks();
+
+  function makeElement(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+  function fieldLabel(text, control) {
+    const label = makeElement("label", "", text);
+    label.appendChild(control);
+    return label;
+  }
+  function option(value, label, selected) {
+    const node = makeElement("option", "", label);
+    node.value = value;
+    node.selected = value === selected;
+    return node;
+  }
+  function selectControl(items, selected, key, taskId) {
+    const control = document.createElement("select");
+    if (key) { control.dataset.taskField = key; control.dataset.taskId = taskId; }
+    items.forEach(function (item) { control.appendChild(option(item[0], item[1], String(selected))); });
+    return control;
+  }
+  function renderList() {
+    const filter = byId("qgTaskFilter").value;
+    const query = normalizeText(byId("qgTaskSearch").value);
+    const order = { inbox: 0, todo: 1, doing: 2, done: 3, archived: 4 };
+    const items = tasks.slice().sort(function (a, b) {
+      return order[a.status] - order[b.status] || a.priority - b.priority || a.title.localeCompare(b.title, "fr");
+    }).filter(function (task) {
+      const matches = filter === "all" || filter === "active" && (task.status === "inbox" || task.status === "todo" || task.status === "doing") || filter === task.status;
+      const searchable = normalizeText(task.title + " " + task.doneWhen + " " + categoryName(task.category));
+      return matches && (!query || searchable.indexOf(query) >= 0);
+    });
+    list.replaceChildren();
+    if (!items.length) {
+      list.appendChild(makeElement("p", "qg-empty", tasks.length ? "Aucune tâche ne correspond à ce filtre." : "Votre liste est vide. Importez votre fichier ou ajoutez une tâche; aucune donnée du cockpit n’a été modifiée."));
+      return;
+    }
+    items.forEach(function (task) {
+      const card = makeElement("article", "qg-task-card");
+      const fields = makeElement("div", "qg-task-fields");
+      const title = document.createElement("input");
+      title.maxLength = 180; title.value = task.title;
+      title.dataset.taskField = "title"; title.dataset.taskId = task.id;
+      fields.appendChild(fieldLabel("Action", title));
+      const categoryOptions = [["", "À trier"]].concat(CATEGORIES.map(function (entry) { return [entry[0], entry[2] + " " + entry[1]]; }));
+      fields.appendChild(fieldLabel("Univers", selectControl(categoryOptions, task.category || "", "category", task.id)));
+      fields.appendChild(fieldLabel("État", selectControl(Object.keys(STATUSES).map(function (key) { return [key, STATUSES[key]]; }), task.status, "status", task.id)));
+      fields.appendChild(fieldLabel("Durée", selectControl(DURATIONS.map(function (minutes) { return [String(minutes), minutes < 60 ? minutes + " min" : (minutes / 60) + " h"]; }), String(task.minutes), "minutes", task.id)));
+      fields.appendChild(fieldLabel("Priorité", selectControl([["1", "Haute"], ["2", "Normale"], ["3", "Peut attendre"]], String(task.priority), "priority", task.id)));
+      card.appendChild(fields);
+
+      const doneWhen = document.createElement("textarea");
+      doneWhen.maxLength = 300; doneWhen.placeholder = "Je saurai que c’est terminé quand…"; doneWhen.value = task.doneWhen;
+      doneWhen.dataset.taskField = "doneWhen"; doneWhen.dataset.taskId = task.id;
+      card.appendChild(fieldLabel("Résultat clair (facultatif)", doneWhen));
+      const actions = makeElement("div", "qg-task-actions");
+      actions.appendChild(makeElement("span", "qg-task-origin", categoryName(task.category) + " · " + STATUSES[task.status]));
+      const archive = makeElement("button", "", task.status === "archived" ? "Réactiver" : "Archiver");
+      archive.type = "button"; archive.dataset.taskAction = task.status === "archived" ? "restore" : "archive"; archive.dataset.taskId = task.id;
+      actions.appendChild(archive); card.appendChild(actions); list.appendChild(card);
+    });
+  }
+  function render() {
+    const active = tasks.filter(function (task) { return task.status !== "archived"; });
+    const inbox = tasks.filter(function (task) { return task.status === "inbox"; }).length;
+    const doing = tasks.filter(function (task) { return task.status === "todo" || task.status === "doing"; }).length;
+    const done = tasks.filter(function (task) { return task.status === "done"; }).length;
+    byId("qgTaskCounts").textContent = active.length + " tâche" + (active.length === 1 ? "" : "s") +
+      " · " + doing + " à faire/en cours · " + inbox + " à trier · " + done + " terminée" + (done === 1 ? "" : "s");
+    renderList();
+  }
+  function openManager() {
+    previousFocus = document.activeElement; shade.hidden = false; render(); byId("qgTaskNewTitle").focus();
+  }
+  function closeManager() {
+    shade.hidden = true;
+    if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+  }
+  function feedback(message) { byId("qgFeedback").textContent = message; }
+  function makeTask(data) {
+    return cleanTask({
+      id: makeId(), title: data.title, category: data.category,
+      status: data.status || (data.category ? "todo" : "inbox"),
+      minutes: data.minutes || 15, priority: data.priority || 2,
+      doneWhen: data.doneWhen || "", source: data.source || "personnelle"
+    });
+  }
+  function parseText(text) {
+    let section = null;
+    const result = [];
+    const ignored = ["tache", "taches", "liste", "liste de taches", "a faire", "todo", "to do", "priorites", "objectifs", "tasks"];
+    String(text || "").split(/\r?\n/).forEach(function (raw) {
+      let line = raw.trim();
+      if (!line || /^[-=_*]{3,}$/.test(line)) return;
+      const heading = line.match(/^#{1,6}\s+(.+?)\s*#*$/);
+      if (heading) { section = categoryFrom(heading[1].replace(/[:：]\s*$/, "")); return; }
+      const bareHeading = line.replace(/[:：]\s*$/, "");
+      if (ignored.indexOf(normalizeText(bareHeading)) >= 0) { section = null; return; }
+      const category = categoryFrom(bareHeading);
+      if (category) { section = category; return; }
+      let done = false;
+      const check = line.match(/^(?:[-*+•]\s*)?\[([ xX])\]\s*(.*)$/);
+      if (check) { done = /x/i.test(check[1]); line = check[2]; }
+      else {
+        const checkmark = line.match(/^([☐☑✅])\s*(.*)$/);
+        if (checkmark) { done = checkmark[1] !== "☐"; line = checkmark[2]; }
+      }
+      line = line.replace(/^(?:[-*+•]|\d+[.)])\s*/, "");
+      const tag = line.match(/^\[([^\]]+)\]\s*(.+)$/);
+      let taskCategory = section;
+      if (tag) {
+        const taggedCategory = categoryFrom(tag[1]);
+        if (taggedCategory) { taskCategory = taggedCategory; line = tag[2]; }
+      }
+      line = line.trim().replace(/\s+/g, " ").slice(0, 180);
+      if (line) result.push(makeTask({ title: line, category: taskCategory, status: done ? "done" : taskCategory ? "todo" : "inbox", source: "txt" }));
+    });
+    return result.slice(0, LIMIT);
+  }
+  function parseBackup(data) {
+    if (!data || (data.format !== "qg-cockpit-tasks" && data.format !== "qg-personal-tasks") || !Array.isArray(data.tasks)) {
+      throw new Error("Ce fichier n’est pas une sauvegarde de tâches QG reconnue.");
+    }
+    return data.tasks.slice(0, LIMIT).map(function (task) {
+      const clean = cleanTask(task); clean.source = "sauvegarde"; return clean;
+    }).filter(function (task) { return task.title; });
+  }
+  function showPreview(items, kind) {
+    pending = items;
+    const preview = byId("qgImportPreview"), rows = byId("qgImportRows");
+    rows.replaceChildren();
+    if (!items.length) { preview.hidden = true; byId("qgImportNotice").textContent = "Aucune tâche lisible trouvée. Vérifiez que chaque tâche occupe une ligne."; return; }
+    const counts = {};
+    items.forEach(function (task) { const name = categoryName(task.category); counts[name] = (counts[name] || 0) + 1; });
+    byId("qgImportSummary").textContent = items.length + " tâche" + (items.length === 1 ? "" : "s") +
+      " trouvée" + (items.length === 1 ? "" : "s") + " dans " + kind + " · " +
+      Object.keys(counts).map(function (name) { return name + ": " + counts[name]; }).join(" · ");
+    items.slice(0, 12).forEach(function (task) {
+      const row = makeElement("li", "", task.title + " — ");
+      row.appendChild(makeElement("em", "", categoryName(task.category))); rows.appendChild(row);
+    });
+    if (items.length > 12) rows.appendChild(makeElement("li", "", "… et " + (items.length - 12) + " autre(s)"));
+    byId("qgApplyImport").textContent = "Ajouter " + items.length + " tâche" + (items.length === 1 ? "" : "s");
+    preview.hidden = false;
+    byId("qgImportNotice").textContent = "Vérifiez le classement avant l’ajout. « À trier » signifie qu’aucune catégorie n’a été devinée.";
+  }
+  function startImport() { showPreview(parseText(byId("qgTaskPaste").value), "texte"); }
+  function addPending() {
+    if (!pending.length) return;
+    const seen = new Set(tasks.map(function (task) { return normalizeText(task.title); }));
+    let added = 0, duplicates = 0;
+    pending.forEach(function (task) {
+      const key = normalizeText(task.title);
+      if (!key || seen.has(key)) { duplicates++; return; }
+      seen.add(key); tasks.push(cleanTask(task)); added++;
+    });
+    pending = []; byId("qgImportPreview").hidden = true;
+    byId("qgImportNotice").textContent = added + " tâche" + (added === 1 ? "" : "s") + " ajoutée" +
+      (added === 1 ? "" : "s") + (duplicates ? " · " + duplicates + " doublon(s) ignoré(s)" : "") +
+      " · Aucune tâche existante n’a été remplacée.";
+    if (!storeTasks()) feedback("Le navigateur n’a pas pu enregistrer les tâches. Téléchargez une copie JSON.");
+    render();
+  }
+  function importFailure(message) {
+    pending = []; byId("qgImportPreview").hidden = true; byId("qgImportNotice").textContent = message;
+  }
+
+  byId("qgTaskNewCategory").appendChild(option("", "À trier", ""));
+  CATEGORIES.forEach(function (item) { byId("qgTaskNewCategory").appendChild(option(item[0], item[2] + " " + item[1], "")); });
+  byId("qgOpenTasks").addEventListener("click", openManager);
+  byId("qgCloseTasks").addEventListener("click", closeManager);
+  shade.addEventListener("click", function (event) { if (event.target === shade) closeManager(); });
+  byId("qgTaskManager").addEventListener("keydown", function (event) {
+    if (event.key === "Escape") { closeManager(); return; }
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(byId("qgTaskManager").querySelectorAll("button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary"))
+      .filter(function (node) { return node.offsetParent !== null; });
+    if (!focusable.length) return;
+    if (event.shiftKey && document.activeElement === focusable[0]) { event.preventDefault(); focusable[focusable.length - 1].focus(); }
+    else if (!event.shiftKey && document.activeElement === focusable[focusable.length - 1]) { event.preventDefault(); focusable[0].focus(); }
+  });
+  byId("qgTaskAddForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    const title = byId("qgTaskNewTitle").value.trim();
+    if (!title) return;
+    tasks.unshift(makeTask({ title: title, category: byId("qgTaskNewCategory").value || null, minutes: +byId("qgTaskNewMinutes").value, source: "personnelle" }));
+    byId("qgTaskNewTitle").value = "";
+    if (!storeTasks()) feedback("Le navigateur n’a pas pu enregistrer les tâches. Téléchargez une copie JSON.");
+    render(); feedback("Tâche ajoutée.");
+  });
+  byId("qgTaskFilter").addEventListener("change", renderList);
+  byId("qgTaskSearch").addEventListener("input", renderList);
+  list.addEventListener("change", function (event) {
+    const field = event.target.closest("[data-task-field]");
+    if (!field) return;
+    const task = tasks.find(function (item) { return item.id === field.dataset.taskId; });
+    if (!task) return;
+    const key = field.dataset.taskField;
+    if (key === "title") { const title = field.value.trim(); if (title) task.title = title.slice(0, 180); }
+    else if (key === "category") { task.category = validCategory(field.value) ? field.value : null; if (task.category && task.status === "inbox") task.status = "todo"; }
+    else if (key === "status" && Object.prototype.hasOwnProperty.call(STATUSES, field.value)) task.status = field.value;
+    else if (key === "minutes" && DURATIONS.indexOf(+field.value) >= 0) task.minutes = +field.value;
+    else if (key === "priority" && [1, 2, 3].indexOf(+field.value) >= 0) task.priority = +field.value;
+    else if (key === "doneWhen") task.doneWhen = field.value.slice(0, 300);
+    if (!storeTasks()) feedback("Le navigateur n’a pas pu enregistrer les tâches. Téléchargez une copie JSON.");
+    render();
+  });
+  list.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-task-action]");
+    if (!button) return;
+    const task = tasks.find(function (item) { return item.id === button.dataset.taskId; });
+    if (!task) return;
+    task.status = button.dataset.taskAction === "archive" ? "archived" : "todo";
+    storeTasks(); render();
+  });
+  byId("qgPreviewImport").addEventListener("click", startImport);
+  byId("qgTaskFile").addEventListener("change", async function (event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (file.size > 1000000) { importFailure("Le fichier dépasse 1 Mo. Importez seulement la liste de tâches."); event.target.value = ""; return; }
+    try {
+      const content = await file.text();
+      if (/\.json$/i.test(file.name)) showPreview(parseBackup(JSON.parse(content)), "sauvegarde JSON");
+      else { byId("qgTaskPaste").value = content; startImport(); }
+    } catch (error) { importFailure(error && error.message ? error.message : "Impossible de lire ce fichier."); }
+    event.target.value = "";
+  });
+  byId("qgApplyImport").addEventListener("click", addPending);
+  byId("qgCancelImport").addEventListener("click", function () {
+    pending = []; byId("qgImportPreview").hidden = true; byId("qgImportNotice").textContent = "Import annulé; aucune tâche n’a été ajoutée.";
+  });
+  byId("qgExportTasks").addEventListener("click", function () {
+    const data = { format: "qg-personal-tasks", version: 2, exportedAt: new Date().toISOString(), tasks: tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob), anchor = document.createElement("a");
+    anchor.href = url; anchor.download = "qg-taches-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(anchor); anchor.click(); anchor.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+  byId("qgInstallHintClose").addEventListener("click", function () { byId("qgInstallHint").hidden = true; });
+  let installPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (event) { event.preventDefault(); installPrompt = event; });
+  byId("qgInstallApp").addEventListener("click", async function () {
+    const hint = byId("qgInstallHint"), text = hint.querySelector("span");
+    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+      text.textContent = "Le QG est déjà ouvert en mode application. Vous pouvez l’épingler depuis Windows.";
+    } else if (installPrompt) {
+      const prompt = installPrompt; installPrompt = null; await prompt.prompt();
+      const choice = await prompt.userChoice;
+      text.textContent = choice.outcome === "accepted" ? "Le QG est en cours d’installation." : "Installation annulée. Réessayez depuis le menu du navigateur.";
+    } else {
+      text.textContent = "Dans Microsoft Edge, ouvrez ⋯ > Applications > Installer ce site comme une application.";
+    }
+    hint.hidden = false;
+  });
+  window.addEventListener("appinstalled", function () {
+    byId("qgInstallHint").querySelector("span").textContent = "Installation terminée. Vous pouvez lancer le QG depuis Windows.";
+    byId("qgInstallHint").hidden = false;
+  });
+
+  const legacyImportCount = legacySaved ? tasks.length : 0;
+  render();
+  if (legacyImportCount) feedback(legacyImportCount + " ancienne(s) tâche(s) copiée(s). La sauvegarde originale reste intacte.");
 })();
