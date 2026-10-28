@@ -1,0 +1,60 @@
+#qgToolbar{position:absolute;z-index:4;left:12px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;gap:7px;align-items:flex-start;max-width:calc(100vw - 66px)}
+#qgToolbar>button{background:rgba(7,11,21,.88);border-color:#35527f;color:#e6f0ff;backdrop-filter:blur(10px);box-shadow:0 4px 18px #0008;white-space:nowrap}
+#qgToolbar>button:first-child{border-color:#4fd1e8;color:#8eeaff}
+#qgToolbar>button:focus-visible,#qgTaskManager button:focus-visible,#qgTaskManager input:focus-visible,#qgTaskManager select:focus-visible,#qgTaskManager textarea:focus-visible{outline:2px solid #ffb347;outline-offset:2px}
+#qgInstallHint{position:absolute;left:0;top:48px;display:flex;gap:12px;align-items:flex-start;width:min(360px,calc(100vw - 32px));padding:12px;background:#0b1427;border:1px solid #4fd1e8;border-radius:12px;color:#e6f0ff;box-shadow:0 14px 30px #000c;line-height:1.45}
+#qgInstallHint[hidden]{display:none}
+#qgInstallHint button{margin-left:auto;padding:3px 7px;flex:none}
+#qgTaskShade{position:absolute;z-index:8;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(1,3,12,.78);backdrop-filter:blur(9px)}
+#qgTaskShade[hidden]{display:none}
+#qgTaskManager{--qg-line:#2a4168;--qg-dim:#9db2d2;width:min(940px,100%);max-height:calc(100dvh - 28px);overflow:auto;padding:clamp(14px,3vw,24px);border:1px solid #4fd1e8;border-radius:22px;background:radial-gradient(ellipse at 5% 0,#1d3658 0,transparent 45%),linear-gradient(155deg,#0d172b,#070b15 70%);color:#e6f0ff;box-shadow:0 28px 90px #000c,0 0 38px #4fd1e833;text-shadow:none}
+.qg-head,.qg-list-head,.qg-list-head>div,.qg-actions,.qg-tools,.qg-add{display:flex;gap:10px;align-items:center}
+.qg-head{justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.qg-head h2{font-size:26px;margin:0 0 4px}
+.qg-head>button{flex:none}
+.qg-kicker{color:#63d9f1;font-size:11px;letter-spacing:.13em;margin:0 0 5px}
+.qg-intro,.qg-hint,.qg-local-note,.qg-import>p{color:#9db2d2;font-size:13px;line-height:1.45;margin:4px 0}
+.qg-add,.qg-tools{flex-wrap:wrap;padding:12px;background:#081222bd;border:1px solid #243858;border-radius:14px}
+.qg-grow{flex:1;min-width:200px}
+#qgTaskManager label{display:flex;flex-direction:column;gap:5px;color:#b8c8df;font-size:13px}
+#qgTaskManager input:not([type=checkbox]):not([type=file]),#qgTaskManager select,#qgTaskManager textarea{width:100%;min-height:38px;padding:8px 10px;border:1px solid #30486d;border-radius:9px;background:#060d19;color:#e6f0ff;font:inherit}
+#qgTaskManager textarea{resize:vertical;min-height:82px}
+#qgTaskManager input[type=checkbox]{accent-color:#4fd1e8}
+.qg-add button{align-self:flex-end}
+.qg-hint{flex-basis:100%;margin:0}
+.qg-primary{border-color:#4fd1e8!important;color:#8eeaff!important;background:#0b2030!important}
+.qg-import{margin-top:12px;padding:12px 14px;border:1px solid #2a4168;border-radius:14px;background:#0a1324}
+.qg-import summary{cursor:pointer;color:#9ceeff;font-weight:700}
+.qg-file-label{margin-top:10px}
+#qgTaskFile{display:block;max-width:100%;margin:5px 0 10px;color:#9db2d2}
+.qg-actions{flex-wrap:wrap;margin-top:10px}
+.qg-preview{margin-top:12px;padding:12px;border:1px solid #35527f;border-radius:12px;background:#060d19}
+.qg-preview[hidden]{display:none}
+.qg-preview h3,.qg-list-section h3{margin:0;font-size:18px}
+.qg-preview ul{padding-left:20px;margin:8px 0;color:#cbd8ec}
+.qg-preview li{margin:5px 0;font-size:13px}
+.qg-preview li em{color:#68def3;font-style:normal}
+.qg-notice{min-height:1em;color:#9ceeff}
+.qg-list-section{margin-top:18px}
+.qg-list-head{justify-content:space-between;flex-wrap:wrap;align-items:flex-start}
+.qg-list-head>div{display:block}
+.qg-suggestions{flex-direction:row!important;align-items:center!important}
+.qg-tools{margin-top:9px}
+.qg-local-note{margin:8px 2px}
+.qg-task-list{display:grid;gap:9px;margin-top:10px}
+.qg-task-card{padding:12px;border:1px solid #293f64;border-radius:13px;background:linear-gradient(120deg,#101d34,#091221)}
+.qg-task-fields{display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(90px,1fr));gap:8px;align-items:end}
+.qg-task-card .qg-detail{margin-top:8px}
+.qg-task-card .qg-detail textarea{min-height:54px}
+.qg-task-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:7px}
+.qg-task-origin{color:#8199bd;font-size:11px}
+.qg-empty{padding:18px;border:1px dashed #35527f;border-radius:13px;color:#a9bdd9;text-align:center;line-height:1.5}
+.quest-intro{display:block;margin:5px 0;color:#a9bdd9}
+.qg-personal-quests{margin:10px 0 14px}
+.qg-personal-quests h3{margin:0 0 7px;color:#9ceeff;font-size:15px}
+.qg-personal-quests .qg-personal-note{color:#9db2d2;font-size:12px;margin:6px 0}
+.qg-personal-quests .qg-personal-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+@media(max-width:680px){#qgTaskShade{padding:7px}#qgTaskManager{max-height:calc(100dvh - 14px);border-radius:15px}.qg-task-fields{grid-template-columns:1fr 1fr}.qg-task-fields label:first-child{grid-column:1/-1}.qg-list-head>div{display:block}.qg-suggestions{width:100%}.qg-add{align-items:stretch}.qg-add button{align-self:stretch}.qg-head h2{font-size:22px}#qgToolbar{left:8px;top:calc(55px + env(safe-area-inset-top,0px))}#qgToolbar>button{font-size:12px;padding:6px 8px}}
+@media(prefers-reduced-motion:reduce){#qgTaskManager *,#qgTaskShade{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+#pan .qs[hidden],.quest-intro[hidden]{display:none!important}

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&display=swap">
+<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#070b15"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;600;700&display=swap"><link rel="stylesheet" href="./tasks.css">
 <title>QG – Cockpit de vie</title>
 <style>
 :root{color-scheme:dark;--bg:#070b15;--bg2:#0d1424;--ln:#25365a;--tx:#e6f0ff;--dm:#8ea6c9;--am:#ffb347;--cy:#4fd1e8;--mg:#ff4d8d;--ok:#8be36a;box-sizing:border-box}
@@ -87,12 +88,51 @@ html,body{height:100%;margin:0;overflow:hidden}
 #pbw{--tx:#e6f0ff;--dm:#8ea6c9;--bg:#070b15;--ln:#25365a;color:var(--tx);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,360px);background:linear-gradient(180deg,#0f1b36,#070d1b);border:1px solid var(--mg);border-radius:14px;padding:12px;z-index:6;display:none;box-shadow:0 0 50px -6px var(--mg)}
 #pbc{display:block;height:min(62vh,480px);aspect-ratio:320/480;width:auto;max-width:100%;margin:0 auto;touch-action:none;border-radius:10px;border:1px solid var(--cy);background:#04030c}
 #pbw .row{margin-top:10px;justify-content:center}
-</style></head><body><div id="crt"></div><div id="win"><canvas id="gx"></canvas><div id="pan"></div>
+</style></head><body><div id="crt"></div><div id="win"><div id="qgToolbar" aria-label="Outils du cockpit">
+  <button id="qgOpenTasks" type="button" aria-haspopup="dialog" aria-controls="qgTaskManager">☷ Mes tâches</button>
+  <button id="qgInstallApp" type="button" aria-describedby="qgInstallHint">⇩ Installer</button>
+  <div id="qgInstallHint" role="status" hidden><span></span><button id="qgInstallHintClose" type="button" aria-label="Fermer le conseil">✕</button></div>
+</div>
+<canvas id="gx"></canvas><div id="pan"></div>
 <div id="set"><button data-a="sx" style="float:right" aria-label="Fermer">✕</button><h2 id="stt" class="dh"></h2><div id="sdesc" class="dm"></div><div id="hub" class="hub"></div>
 <div class="row"><label id="lrev">Revenus du mois <input type="number" id="rev" min="0"></label><label id="lgoal">Objectif <input type="number" id="goal" min="0"></label><label id="len">Énergie du jour <input type="range" id="en" min="0" max="100"></label></div><div id="al"></div>
 <p class="row" id="sbtn" style="flex-direction:row;flex-wrap:wrap"><button data-a="mo">Nouveau mois (remet les compteurs à zéro)</button><button data-a="rs">Tout réinitialiser</button></p></div>
 <div id="pbw"><button data-a="pbx" style="float:right" aria-label="Fermer">✕</button><h2 class="dh">🎱 Pinball</h2><canvas id="pbc" width="320" height="480"></canvas><div class="row" style="flex-direction:row;justify-content:center"><button id="pbl">◀</button><button id="pbn" class="p">Lancer</button><button id="pbr">▶</button></div></div>
-<div id="zb"><button data-a="zi" aria-label="Zoom avant">＋</button><button data-a="zo" aria-label="Zoom arrière">－</button></div></div><div id="ts" role="status"></div>
+<div id="zb"><button data-a="zi" aria-label="Zoom avant">＋</button><button data-a="zo" aria-label="Zoom arrière">－</button></div><div id="qgTaskShade" hidden>
+  <section id="qgTaskManager" role="dialog" aria-modal="true" aria-labelledby="qgTaskTitle" tabindex="-1">
+    <header class="qg-head">
+      <div><p class="qg-kicker">QG · ORGANISATION PERSONNELLE</p><h2 id="qgTaskTitle">Mes tâches</h2><p class="qg-intro">Vos tâches restent ici; rien n’est choisi au hasard. Importez le .txt reçu, classez les lignes inconnues à votre rythme et rendez chaque action plus précise.</p></div>
+      <button id="qgCloseTasks" type="button" aria-label="Fermer Mes tâches">✕</button>
+    </header>
+    <form id="qgTaskAddForm" class="qg-add">
+      <label class="qg-grow">Nouvelle tâche<input id="qgTaskNewTitle" maxlength="180" placeholder="Ex. Confirmer le rendez-vous avec…" required></label>
+      <label>Univers<select id="qgTaskNewCategory"></select></label>
+      <label>Durée<select id="qgTaskNewMinutes"><option value="5">5 min</option><option value="15" selected>15 min</option><option value="30">30 min</option><option value="60">1 h</option><option value="90">1 h 30</option></select></label>
+      <button class="qg-primary" type="submit">＋ Ajouter</button>
+      <p class="qg-hint">Une bonne tâche commence par une action concrète. « Répondre à Julie pour confirmer l’heure » est plus clair que « messages ».</p>
+    </form>
+    <details class="qg-import">
+      <summary>Importer sans tout retaper : .txt, .md ou sauvegarde .json</summary>
+      <p>Choisissez un fichier ou collez son contenu. Les titres de sections reconnus sont classés; les autres restent « À trier ». Rien n’est remplacé.</p>
+      <label class="qg-file-label" for="qgTaskFile">Choisir un fichier texte ou une sauvegarde</label>
+      <input id="qgTaskFile" type="file" accept=".txt,.md,.markdown,.json,text/plain,application/json">
+      <label for="qgTaskPaste">Ou coller le texte ici</label>
+      <textarea id="qgTaskPaste" rows="5" placeholder="Ex.&#10;## Tatouage&#10;- Répondre à la cliente pour confirmer la date&#10;&#10;## Atelier 3D&#10;- Photographier le support terminé"></textarea>
+      <div class="qg-actions"><button id="qgPreviewImport" type="button">Prévisualiser</button><button id="qgExportTasks" type="button">Télécharger une copie de mes tâches (.json)</button></div>
+      <div id="qgImportPreview" class="qg-preview" hidden aria-live="polite">
+        <h3>Aperçu avant ajout</h3><p id="qgImportSummary"></p><ul id="qgImportRows"></ul>
+        <div class="qg-actions"><button id="qgApplyImport" type="button" class="qg-primary">Ajouter ces tâches</button><button id="qgCancelImport" type="button">Annuler</button></div>
+      </div>
+      <p id="qgImportNotice" class="qg-notice" role="status" aria-live="polite"></p>
+    </details>
+    <section class="qg-list-section" aria-labelledby="qgListHeading">
+      <div class="qg-list-head"><div><h3 id="qgListHeading">Votre liste</h3><p id="qgTaskCounts" class="qg-hint"></p></div><label class="qg-suggestions"><input id="qgShowSuggestions" type="checkbox"> Afficher aussi les suggestions génériques</label></div>
+      <div class="qg-tools"><label class="qg-grow">Rechercher<input id="qgTaskSearch" type="search" placeholder="Nom, résultat attendu…"></label><label>Afficher<select id="qgTaskFilter"><option value="active">À faire et en cours</option><option value="inbox">À trier</option><option value="done">Terminées</option><option value="archived">Archivées</option><option value="all">Tout</option></select></label></div>
+      <p class="qg-local-note">La liste est enregistrée dans ce navigateur, sans compte ni synchronisation. Gardez une copie .json si vous changez d’appareil.</p>
+      <div id="qgTaskList" class="qg-task-list"></div>
+    </section>
+  </section>
+</div></div><div id="ts" role="status"></div>
 <script>
 const D=[
 ["tat","Boutique","🖋️","#ff4d8d","Séances|20|1;Heures tatouées|80|2;Nouveaux clients|10|1;Retouches|6|1;Flashs dessinés|12|1;Dépôts reçus|15|1;Annulations|3|1;Consultations|12|1;Photos de pièces|15|1;Avis reçus|5|1;Aiguilles changées|40|5;Stérilisations|20|1;Machines entretenues|10|1;Cartes-cadeaux vendues|4|1;Pauses prises|30|1;Pauses d’étirement|30|1","Répondre aux demandes;Dessiner un flash 20 min;Préparer le poste de demain;Photographier une pièce terminée;Entretenir une machine"],
@@ -155,7 +195,7 @@ function R(){
  const z=Z.find(a=>a.id===S.sel),cost=30*lv(z.id);
  $("#pan").style.display=S.open?"block":"none";$("#pan").classList.toggle("min",!!S.minP);$("#pan").style.setProperty("--zc",z.c);if(lastSel!==S.sel+S.open){lastSel=S.sel+S.open;const p=$("#pan");p.classList.remove("flip");void p.offsetWidth;p.classList.add("flip")}
  $("#pan").innerHTML=`<button data-a="x" style="float:right" aria-label="Fermer">✕</button><button data-a="mn" style="float:right;margin-right:6px" aria-label="Réduire">—</button><h2 class="dh">${z.i} ${z.n} – niveau ${lv(z.id)}</h2><div class="pb">`+(z.id==="gar"?'<div id="live"></div>':"")+
- `<small>Quêtes du jour : chaque case cochée donne 10 points. Chaque stat ajoutée donne ${lv(z.id)} XP.</small><div class="qs" style="margin:8px 0 14px">`+
+ `<small class="quest-intro">Suggestions fixes et facultatives; elles ne sont jamais attribuées au hasard. Chaque coche donne 10 points. Chaque stat ajoutée donne ${lv(z.id)} XP.</small><div class="qs" style="margin:8px 0 14px">`+
  z.q.map((t,j)=>{const k=z.id+j,d=S.done.i[k];return`<button class="q ${d?"d":""}" data-a="q" data-k="${k}" role="checkbox" aria-checked="${!!d}"><span class="bx">${d?"✓":""}</span><span>${t}</span><em>+10</em></button>`}).join("")+
  `</div><div class="sg">`+z.s.map((s,i)=>{const k=z.id+i;return`<div class="st"><div>${s[0]} : <b>${val(k)}</b> / ${s[1]}<div class="bar"><i style="width:${Math.min(100,val(k)/s[1]*100)}%"></i></div></div><button data-a="t" data-k="${k}" data-d="-${s[2]}" aria-label="Retirer ${s[2]} à ${s[0]}">−</button><button class="p" data-a="t" data-k="${k}" data-d="${s[2]}" data-z="${z.id}" aria-label="Ajouter ${s[2]} à ${s[0]}">+${s[2]}</button></div>`}).join("")+
  `</div><p><button class="p" data-a="up" data-z="${z.id}" ${S.pts<cost?"disabled":""}>Améliorer cette catégorie (${cost} points)</button></p></div>`;
@@ -303,4 +343,4 @@ addEventListener("pointerup",()=>{PB.lk=PB.rk=0});
 $("#pbn").addEventListener("click",pbN);
 addEventListener("keydown",e=>{if(!PB.on)return;if(e.key==="ArrowLeft")PB.lk=1;if(e.key==="ArrowRight")PB.rk=1;if(e.key===" "){pbN();e.preventDefault()}});
 addEventListener("keyup",e=>{if(e.key==="ArrowLeft")PB.lk=0;if(e.key==="ArrowRight")PB.rk=0});
-</script></body></html>
+</script><script src="./tasks.js"></script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js",{scope:"./"}).catch(()=>{}))}</script></body></html>
