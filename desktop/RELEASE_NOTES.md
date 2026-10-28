@@ -1,10 +1,9 @@
-# DumbFuckCockpit Widget 0.4.0
+# DumbFuckCockpit Widget 0.4.1
 
-Le widget affiche maintenant la carte 3D originale de l’application Chrome et ses treize univers. La version Windows reprend les fichiers du cockpit à la compilation; le compagnon ne présente plus un second gestionnaire de tâches ni une demande d’import JSON.
+Correction du démarrage de la couche transparente : Windows reçoit maintenant la poignée de fenêtre au format natif attendu. Le widget ne doit plus rester bloqué sur « non disponible » quand Explorer fournit la surface du bureau.
 
-La scène reste transparente, derrière les icônes, et laisse passer leurs clics. Le panneau sert uniquement à choisir le côté, régler la transparence et le mouvement, masquer le widget et activer son lancement avec Windows.
+Le panneau de réglages ne s’ouvre plus automatiquement. La scène démarre directement sur le bureau; les réglages restent accessibles depuis l’icône de notification ou `Ctrl+Alt+Espace`.
 
-La progression du cockpit Chrome reste dans Chrome. Le widget conserve son propre profil Windows. Les tâches et réglages déjà enregistrés par QG Desktop restent dans leur ancien dossier local.
+La fenêtre PWA de Chrome ne peut pas être transformée en couche du bureau par Windows. Fermez cette fenêtre pour ne garder que le visuel transparent. Les clics continuent de passer aux icônes; les données locales de Chrome ne sont pas synchronisées avec le widget.
 
 Compatible avec Windows 10 et Windows 11. L’installateur n’est pas signé et Windows peut afficher un avertissement d’éditeur non vérifié.
-

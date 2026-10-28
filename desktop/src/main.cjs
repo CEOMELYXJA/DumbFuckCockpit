@@ -395,8 +395,9 @@ if (process.argv.includes("--qg-ambient-host")) {
     globalShortcut.register("Control+Alt+Shift+Space", requestAmbientRebuild);
     app.on("activate", openPanel);
     appReady = true;
+    // Start directly on the desktop layer. The settings panel is opened only
+    // on demand from the tray or the keyboard shortcut.
     if (secondInstancePending) openPanel();
-    else openPanel(true);
   });
 
   app.on("before-quit", () => {

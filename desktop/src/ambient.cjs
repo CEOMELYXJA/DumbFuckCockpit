@@ -43,6 +43,13 @@ function monitorBounds(display) {
   };
 }
 
+function nativeHandleBuffer(handle) {
+  const value = BigInt(handle);
+  const buffer = Buffer.alloc(8);
+  buffer.writeBigUInt64LE(value);
+  return buffer;
+}
+
 function widgetBounds(display) {
   const source = display.bounds;
   const width = Math.max(1, Math.min(source.width, Math.round(source.width * 0.68)));
@@ -115,7 +122,7 @@ function createScene(display, desktopHost) {
   window.webContents.once("did-finish-load", () => {
     try {
       if (!nativeHost) throw new Error("Le module Windows de la couche arrière n’est pas disponible.");
-      nativeHost.attachToDesktop(window.getNativeWindowHandle(), desktopHost.handle, monitorBounds(displayZone));
+      nativeHost.attachToDesktop(window.getNativeWindowHandle(), nativeHandleBuffer(desktopHost.handle), monitorBounds(displayZone));
       window.showInactive();
       window.webContents.send("qg:scene-state", { categories: snapshot.categories, tasks: snapshot.tasks, settings: snapshot.settings });
       window.webContents.send("qg:ambient-active", false);
