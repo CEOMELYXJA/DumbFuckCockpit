@@ -1,4 +1,4 @@
-const CACHE_NAME = "qg-cockpit-shell-v2";
+const CACHE_NAME = "qg-cockpit-shell-v3";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./tasks.js", "./tasks.css", "./icon.svg"];
 
 self.addEventListener("install", function (event) {
