@@ -1,8 +1,8 @@
 {
   "name": "qg-desktop-companion",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "QG Desktop — cockpit spatial à deux couches pour Windows.",
+  "description": "DumbFuckCockpit — widget spatial transparent pour le bureau Windows.",
   "author": "CEOMELYXJA",
   "main": "src/main.cjs",
   "postinstall": "electron-builder install-app-deps",
@@ -20,8 +20,8 @@
   },
   "build": {
     "appId": "ca.ceomelyxja.qgdesktop",
-    "productName": "QG Desktop",
-    "artifactName": "QG-Desktop-${version}-${arch}.${ext}",
+    "productName": "DumbFuckCockpit Widget",
+    "artifactName": "DumbFuckCockpit-Widget-${version}-${arch}.${ext}",
     "directories": { "output": "dist" },
     "files": ["src/**/*", "assets/**/*", "package.json"],
     "asar": true,
@@ -33,9 +33,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "QG Desktop",
+      "shortcutName": "DumbFuckCockpit Widget",
       "installerIcon": "assets/qg.ico",
       "uninstallerIcon": "assets/qg.ico"
     }
   }
 }
+

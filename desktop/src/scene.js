@@ -10,7 +10,7 @@
     ["cry", "Crypto"], ["vr", "VR et AR"], ["arc", "Arcade"], ["soc", "Contenu et réseaux"], ["app", "Design visuel"]
   ];
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  const dustPalette = ["116,222,239", "182,159,255", "255,200,137", "225,244,255", "93,171,245"];
+  const dustPalette = ["119,151,154", "149,134,166", "185,154,111", "220,213,199", "121,146,161"];
   const dust = Array.from({ length: 72 }, (_, index) => ({ u: Math.random() * 2 - 1, v: Math.random() * 2 - 1, phase: Math.random() * TAU, size: 0.35 + Math.random() * 0.9, hue: index % 5 }));
   const state = { categories: [], tasks: [], settings: { side: "right", opacity: 0.82, motion: "measured" }, active: false, lastFrame: 0, start: performance.now() };
   let ratio = 1;
@@ -71,7 +71,7 @@
     const progress = state.tasks.length ? state.tasks.filter((task) => task.status === "done").length / state.tasks.length : 0;
     const categories = nodes.map(([id, label], index) => {
       const meta = state.categories.find((entry) => entry[0] === id);
-      const color = meta ? meta[2] : "#8eb9c1";
+      const color = meta ? meta[2] : "#8e9d91";
       const belonging = state.tasks.filter((task) => task.category === id && !["done", "archived"].includes(task.status));
       const angle = (index / nodes.length) * TAU + 0.035 * t + Math.sin(t * 0.13 + index * 0.71) * 0.018 * motion;
       const depth = Math.sin(angle * 2 + tilt) * 0.5 + 0.5;
@@ -91,10 +91,10 @@
 
   function drawNebula(cx, cy, rx, ry, s, t, motion) {
     const clouds = [
-      { x: -0.38, y: -0.27, rx: 0.76, ry: 0.64, angle: -0.48, rgb: [37, 105, 232], phase: 0.5 },
-      { x: 0.36, y: 0.34, rx: 0.83, ry: 0.53, angle: 0.38, rgb: [27, 180, 189], phase: 2.2 },
-      { x: 0.55, y: -0.44, rx: 0.65, ry: 0.65, angle: 0.62, rgb: [148, 67, 215], phase: 4.1 },
-      { x: -0.14, y: 0.52, rx: 0.59, ry: 0.45, angle: -0.28, rgb: [207, 109, 76], phase: 5.3 }
+      { x: -0.38, y: -0.27, rx: 0.76, ry: 0.64, angle: -0.48, rgb: [27, 63, 96], phase: 0.5 },
+      { x: 0.36, y: 0.34, rx: 0.83, ry: 0.53, angle: 0.38, rgb: [31, 86, 83], phase: 2.2 },
+      { x: 0.55, y: -0.44, rx: 0.65, ry: 0.65, angle: 0.62, rgb: [72, 55, 89], phase: 4.1 },
+      { x: -0.14, y: 0.52, rx: 0.59, ry: 0.45, angle: -0.28, rgb: [105, 67, 54], phase: 5.3 }
     ];
     ctx.save();
     ctx.globalCompositeOperation = "screen";
@@ -133,19 +133,19 @@
       const expand = index * 18 * s + Math.sin(t * 0.24 + index) * 2.8 * s * motion;
       ctx.beginPath();
       ctx.ellipse(0, 0, rx + expand, ry + expand * 0.38, 0, 0, TAU);
-      ctx.strokeStyle = `rgba(118,190,201,${alpha(index === 0 ? 0.19 : 0.075)})`;
+      ctx.strokeStyle = `rgba(143,151,145,${alpha(index === 0 ? 0.16 : 0.06)})`;
       ctx.lineWidth = index === 0 ? 0.9 : 0.55;
       ctx.setLineDash(index === 1 ? [2 * s, 10 * s] : []);
       ctx.stroke();
     }
     ctx.setLineDash([1.5 * s, 8 * s]);
     ctx.lineDashOffset = -t * 0.12 * motion;
-    ctx.strokeStyle = `rgba(110,207,221,${alpha(0.15)})`;
+    ctx.strokeStyle = `rgba(130,146,143,${alpha(0.12)})`;
     ctx.lineWidth = 0.7;
     ctx.beginPath(); ctx.ellipse(0, 0, rx * 0.86, ry * 0.84, 0, 0, TAU); ctx.stroke();
     ctx.setLineDash([2 * s, 15 * s]);
     ctx.lineDashOffset = t * 0.08 * motion;
-    ctx.strokeStyle = `rgba(194,137,243,${alpha(0.12)})`;
+    ctx.strokeStyle = `rgba(185,154,111,${alpha(0.09)})`;
     ctx.beginPath(); ctx.ellipse(0, 0, rx * 1.12, ry * 1.12, 0, 0, TAU); ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -155,7 +155,7 @@
     const { cx, cy } = L;
     ctx.save();
     ctx.lineWidth = 0.7;
-    ctx.strokeStyle = `rgba(141,181,195,${alpha(0.12)})`;
+    ctx.strokeStyle = `rgba(143,151,145,${alpha(0.1)})`;
     ctx.beginPath(); ctx.moveTo(cx - L.width * 0.44, cy); ctx.lineTo(cx + L.width * 0.44, cy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(cx, cy - L.height * 0.34); ctx.lineTo(cx, cy + L.height * 0.34); ctx.stroke();
     for (let i = -4; i <= 4; i++) {
@@ -173,7 +173,7 @@
       ctx.beginPath();
       ctx.moveTo(node.x, node.y);
       ctx.quadraticCurveTo(cx + Math.cos(node.angle + 0.1) * 30 * s, cy + Math.sin(node.angle) * 18 * s, next.x, next.y);
-      ctx.strokeStyle = `rgba(117,172,191,${alpha(0.11 + node.depth * 0.055)})`;
+      ctx.strokeStyle = `rgba(130,146,143,${alpha(0.1 + node.depth * 0.045)})`;
       ctx.stroke();
     });
     const route = Math.floor(t * 0.045) % items.length;
@@ -182,8 +182,8 @@
     const px = from.x + (to.x - from.x) * phase;
     const py = from.y + (to.y - from.y) * phase;
     const glow = ctx.createRadialGradient(px, py, 0, px, py, 15 * s);
-    glow.addColorStop(0, `rgba(210,246,238,${alpha(0.52)})`);
-    glow.addColorStop(1, "rgba(170,234,225,0)");
+    glow.addColorStop(0, `rgba(220,213,199,${alpha(0.35)})`);
+    glow.addColorStop(1, "rgba(185,154,111,0)");
     ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(px, py, 15 * s, 0, TAU); ctx.fill();
     ctx.restore();
   }
@@ -192,30 +192,30 @@
     const r = 33 * s;
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.shadowColor = "rgba(104,207,210,.24)";
-    ctx.shadowBlur = 38 * s;
+    ctx.shadowColor = "rgba(143,151,145,.18)";
+    ctx.shadowBlur = 32 * s;
     const center = ctx.createRadialGradient(cx - 5 * s, cy - 8 * s, 2 * s, cx, cy, r * 2.7);
-    center.addColorStop(0, `rgba(255,220,167,${alpha(0.27)})`);
-    center.addColorStop(0.24, `rgba(92,211,228,${alpha(0.17)})`);
-    center.addColorStop(0.58, `rgba(106,91,203,${alpha(0.07)})`);
-    center.addColorStop(1, "rgba(45,72,94,0)");
+    center.addColorStop(0, `rgba(207,177,128,${alpha(0.24)})`);
+    center.addColorStop(0.24, `rgba(125,149,145,${alpha(0.12)})`);
+    center.addColorStop(0.58, `rgba(112,90,112,${alpha(0.055)})`);
+    center.addColorStop(1, "rgba(45,55,57,0)");
     ctx.fillStyle = center; ctx.beginPath(); ctx.arc(cx, cy, r * 1.12, 0, TAU); ctx.fill();
     ctx.globalCompositeOperation = "source-over";
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = `rgba(191,229,225,${alpha(0.78)})`;
+    ctx.strokeStyle = `rgba(204,196,176,${alpha(0.64)})`;
     ctx.lineWidth = 1.05;
     ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI * 0.78, Math.PI * 0.78); ctx.stroke();
-    ctx.strokeStyle = `rgba(233,179,115,${alpha(0.82)})`;
+    ctx.strokeStyle = `rgba(185,154,111,${alpha(0.72)})`;
     ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI * 0.79, Math.PI * 0.79 + Math.max(0.04, progress * TAU * 0.42)); ctx.stroke();
     ctx.setLineDash([1.5 * s, 5 * s]);
-    ctx.strokeStyle = `rgba(162,199,207,${alpha(0.38)})`;
+    ctx.strokeStyle = `rgba(143,151,145,${alpha(0.28)})`;
     ctx.beginPath(); ctx.arc(cx, cy, r + 6 * s + Math.sin(t * 0.2) * s * motion, 0, TAU); ctx.stroke();
     ctx.setLineDash([]);
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillStyle = `rgba(231,244,241,${alpha(0.92)})`;
-    ctx.font = `600 ${13 * s}px Bahnschrift, 'Segoe UI', sans-serif`;
-    ctx.fillText("QG", cx, cy - 3 * s);
-    ctx.fillStyle = `rgba(166,196,202,${alpha(0.76)})`;
+    ctx.fillStyle = `rgba(231,224,210,${alpha(0.9)})`;
+    ctx.font = `600 ${10.5 * s}px Bahnschrift, 'Segoe UI', sans-serif`;
+    ctx.fillText("DFC", cx, cy - 3 * s);
+    ctx.fillStyle = `rgba(166,169,158,${alpha(0.7)})`;
     ctx.font = `500 ${7.5 * s}px Bahnschrift, 'Segoe UI', sans-serif`;
     ctx.fillText(`${active} ACTIF${active === 1 ? "" : "S"} · ${open} OUVERT${open === 1 ? "" : "S"}`, cx, cy + 10 * s);
     ctx.restore();
@@ -235,14 +235,14 @@
     ctx.strokeStyle = `${node.color}a8`; ctx.lineWidth = 0.85 * scale; ctx.stroke(); ctx.restore();
     ctx.shadowColor = node.color; ctx.shadowBlur = (node.count ? 14 : 7) * scale;
     const sphere = ctx.createRadialGradient(node.x - radius * 0.38, node.y - radius * 0.42, 0.5, node.x, node.y, radius * 1.45);
-    sphere.addColorStop(0, "#ffffff"); sphere.addColorStop(0.22, node.color); sphere.addColorStop(0.72, node.color); sphere.addColorStop(1, "rgba(3,12,25,.88)");
+    sphere.addColorStop(0, "#e8e2d6"); sphere.addColorStop(0.18, node.color); sphere.addColorStop(0.68, node.color); sphere.addColorStop(1, "rgba(17,21,26,.94)");
     ctx.fillStyle = sphere;
     ctx.beginPath(); ctx.arc(node.x, node.y, radius * pulse, 0, TAU); ctx.fill();
     ctx.shadowBlur = 0;
     ctx.strokeStyle = `${node.color}7d`; ctx.lineWidth = 0.8;
     ctx.beginPath(); ctx.arc(node.x, node.y, radius + 5 * scale + node.count * 0.35 * scale, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0.025, Math.min(1, node.count / 5))); ctx.stroke();
     ctx.font = `500 ${10 * scale}px Bahnschrift, 'Segoe UI', sans-serif`;
-    ctx.fillStyle = `rgba(220,236,238,${alpha(0.7 + node.depth * 0.28)})`;
+    ctx.fillStyle = `rgba(220,213,199,${alpha(0.7 + node.depth * 0.28)})`;
     ctx.textBaseline = "middle";
     const alignRight = Math.cos(node.angle) < -0.35;
     ctx.textAlign = alignRight ? "right" : "left";
@@ -250,7 +250,7 @@
     ctx.fillText(node.label, node.x + offset, node.y - 2.5 * scale);
     if (node.count) {
       ctx.font = `600 ${7.5 * scale}px Bahnschrift, 'Segoe UI', sans-serif`;
-      ctx.fillStyle = `rgba(218,177,126,${alpha(0.88)})`;
+      ctx.fillStyle = `rgba(185,154,111,${alpha(0.82)})`;
       ctx.fillText(`${node.count} OUV.`, node.x + offset, node.y + 9 * scale);
     }
     ctx.restore();
@@ -262,22 +262,22 @@
     ctx.font = `600 ${8 * s}px Bahnschrift, 'Segoe UI', sans-serif`;
     ctx.letterSpacing = `${1.6 * s}px`;
     ctx.textAlign = "left"; ctx.textBaseline = "top";
-    ctx.fillStyle = `rgba(186,222,224,${alpha(0.72)})`;
-    ctx.fillText("QG / SPATIAL WORKFIELD", x, y);
+    ctx.fillStyle = `rgba(220,213,199,${alpha(0.72)})`;
+    ctx.fillText("DUMBFUCKCOCKPIT / WIDGET", x, y);
     ctx.font = `500 ${7 * s}px Bahnschrift, 'Segoe UI', sans-serif`;
-    ctx.fillStyle = `rgba(158,188,200,${alpha(0.55)})`;
-    ctx.fillText("13 UNIVERS · DONNÉES LOCALES", x, y + 15 * s);
+    ctx.fillStyle = `rgba(166,169,158,${alpha(0.55)})`;
+    ctx.fillText("13 SECTEURS · COUCHE TRANSPARENTE", x, y + 15 * s);
     const widthBar = 68 * s;
-    ctx.fillStyle = `rgba(141,180,195,${alpha(0.16)})`;
+    ctx.fillStyle = `rgba(143,151,145,${alpha(0.14)})`;
     roundedPath(x, y + 32 * s, widthBar, 2 * s, 1 * s); ctx.fill();
     const gradient = ctx.createLinearGradient(x, 0, x + widthBar, 0);
-    gradient.addColorStop(0, `rgba(130,214,210,${alpha(0.92)})`);
-    gradient.addColorStop(1, `rgba(220,177,122,${alpha(0.92)})`);
+    gradient.addColorStop(0, `rgba(125,149,145,${alpha(0.82)})`);
+    gradient.addColorStop(1, `rgba(185,154,111,${alpha(0.82)})`);
     ctx.fillStyle = gradient;
     roundedPath(x, y + 32 * s, widthBar * Math.max(0.02, progress), 2 * s, 1 * s); ctx.fill();
     const metric = `${open} OUVERT${open === 1 ? "" : "S"}   /   ${active} EN COURS   /   ${Math.round(elapsed * 1000)} MS`;
     ctx.font = `500 ${6.4 * s}px Bahnschrift, 'Segoe UI', sans-serif`;
-    ctx.fillStyle = `rgba(154,183,194,${alpha(0.46)})`;
+    ctx.fillStyle = `rgba(166,169,158,${alpha(0.44)})`;
     ctx.fillText(metric, x, y + 43 * s);
     ctx.restore();
   }
@@ -292,3 +292,4 @@
   resize();
   requestAnimationFrame(drawFrame);
 })();
+

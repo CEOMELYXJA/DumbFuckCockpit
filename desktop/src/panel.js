@@ -2,19 +2,19 @@
 
 (() => {
   const categories = [
-    ["tat", "Boutique", "#fa759e", ["tatouage", "tatouages", "studio de tatouage", "tattoo"]],
-    ["ate", "Atelier 3D", "#9bd779", ["3d", "impression 3d", "imprimante 3d"]],
-    ["dro", "Studio drone", "#58c8dc", ["drone", "video drone", "videos drone"]],
-    ["gar", "Garage trottinette", "#e9ae62", ["trottinette", "scooter", "garage scooter"]],
-    ["lab", "Labo code", "#aa9df2", ["code", "programmation", "codage", "developpement"]],
-    ["ban", "Banque", "#e9d274", ["finance", "finances", "revenus", "argent"]],
-    ["cor", "Corps", "#6ed8c5", ["sante", "santé"]],
-    ["mai", "Maison connectée", "#ef9d69", ["maison", "domotique"]],
-    ["cry", "Crypto", "#d8c76a", ["cryptomonnaie", "cryptomonnaies"]],
-    ["vr", "VR et AR", "#c0a0eb", ["vr", "ar", "realite virtuelle", "realite augmentee"]],
-    ["arc", "Arcade", "#eb7985", ["game boy", "jeux video"]],
-    ["soc", "Contenu et réseaux", "#74bde3", ["reseaux sociaux", "contenu", "reseaux", "social"]],
-    ["app", "Design visuel", "#dc87be", ["design", "apparence", "interface", "esthetique"]]
+    ["tat", "Boutique", "#b77f83", ["tatouage", "tatouages", "studio de tatouage", "tattoo"]],
+    ["ate", "Atelier 3D", "#8e9d7b", ["3d", "impression 3d", "imprimante 3d"]],
+    ["dro", "Studio drone", "#77979a", ["drone", "video drone", "videos drone"]],
+    ["gar", "Garage trottinette", "#b38c63", ["trottinette", "scooter", "garage scooter"]],
+    ["lab", "Labo code", "#9586a6", ["code", "programmation", "codage", "developpement"]],
+    ["ban", "Banque", "#b8a477", ["finance", "finances", "revenus", "argent"]],
+    ["cor", "Corps", "#78a398", ["sante", "santé"]],
+    ["mai", "Maison connectée", "#ad8068", ["maison", "domotique"]],
+    ["cry", "Crypto", "#a39870", ["cryptomonnaie", "cryptomonnaies"]],
+    ["vr", "VR et AR", "#9685a3", ["vr", "ar", "realite virtuelle", "realite augmentee"]],
+    ["arc", "Arcade", "#b47a7d", ["game boy", "jeux video"]],
+    ["soc", "Contenu et réseaux", "#7992a1", ["reseaux sociaux", "contenu", "reseaux", "social"]],
+    ["app", "Design visuel", "#a87d98", ["design", "apparence", "interface", "esthetique"]]
   ];
   const durations = [5, 15, 30, 60, 90];
   const ignoredHeadings = new Set(["tache", "taches", "liste", "liste de taches", "a faire", "todo", "to do", "priorites", "objectifs", "tasks", "notes", "projets"]);
@@ -267,10 +267,10 @@
     if (extension === "json") {
       const data = JSON.parse(file.text);
       if (!data || !["qg-personal-tasks", "qg-cockpit-tasks"].includes(data.format) || !Array.isArray(data.tasks)) {
-        throw new Error("Ce fichier n’est pas une sauvegarde QG reconnue. Aucune donnée n’a été modifiée.");
+        throw new Error("Ce fichier n’est pas une sauvegarde DumbFuckCockpit reconnue. Aucune donnée n’a été modifiée.");
       }
       if (data.tasks.length > 500) throw new Error("Cette sauvegarde dépasse 500 tâches. Aucun import n’a été préparé; archivez une partie de la liste d’abord.");
-      return data.tasks.map((task) => createTask({ ...task, source: "sauvegarde QG" })).filter((task) => task.title);
+      return data.tasks.map((task) => createTask({ ...task, source: "sauvegarde DumbFuckCockpit" })).filter((task) => task.title);
     }
     return parseText(file.text);
   }
@@ -315,6 +315,25 @@
     }
   }
 
+  function renderAmbientStatus(snapshot) {
+    const status = snapshot && snapshot.status || "starting";
+    const labels = {
+      visible: "WIDGET · ACTIF DERRIÈRE LES ICÔNES",
+      starting: "WIDGET · DÉMARRAGE EN COURS",
+      hidden: "WIDGET · MASQUÉ",
+      unavailable: "WIDGET · NON DISPONIBLE"
+    };
+    const label = byId("desktopState");
+    const dot = document.querySelector(".live-dot");
+    label.textContent = labels[status] || labels.starting;
+    label.title = snapshot && snapshot.message || "";
+    if (dot) {
+      dot.classList.remove("is-visible", "is-starting", "is-hidden", "is-unavailable");
+      dot.classList.add(`is-${labels[status] ? status : "starting"}`);
+      dot.title = label.title;
+    }
+  }
+
   async function persistSettings() {
     try {
       state.settings = await window.qgDesktop.saveSettings({
@@ -339,6 +358,7 @@
     byId("panelClose").addEventListener("click", () => window.qgDesktop.closePanel());
     byId("settingsOpen").addEventListener("click", () => showSettings(true));
     byId("settingsClose").addEventListener("click", () => showSettings(false));
+    window.qgDesktop.onSettingsOpen(() => showSettings(true));
     byId("importOpen").addEventListener("click", () => { byId("importDialog").showModal(); byId("importPreview").hidden = true; state.pending = []; });
     byId("chooseFile").addEventListener("click", async () => {
       try {
@@ -375,10 +395,13 @@
     byId("importDialog").addEventListener("close", () => { state.pending = []; });
     window.addEventListener("keydown", (event) => { if (event.key === "Escape" && !byId("importDialog").open && !byId("settingsPanel").hidden) showSettings(false); });
     window.qgDesktop.onSnapshot((snapshot) => { state.tasks = (snapshot.tasks || []).map(createTask); state.writeBlocked = Boolean(snapshot.blocked); render(); });
-    window.qgDesktop.getTasks().then((snapshot) => { state.tasks = (snapshot.tasks || []).map(createTask); state.writeBlocked = Boolean(snapshot.blocked); render(); if (state.writeBlocked) toast("La sauvegarde reste intacte; QG Desktop refuse de la remplacer."); });
+    window.qgDesktop.onAmbientStatus(renderAmbientStatus);
+    window.qgDesktop.getAmbientStatus().then(renderAmbientStatus);
+    window.qgDesktop.getTasks().then((snapshot) => { state.tasks = (snapshot.tasks || []).map(createTask); state.writeBlocked = Boolean(snapshot.blocked); render(); if (state.writeBlocked) toast("La sauvegarde reste intacte; DumbFuckCockpit refuse de la remplacer."); });
     window.qgDesktop.getSettings().then((settings) => { state.settings = { ...state.settings, ...settings }; });
     render();
   }
 
   initialize();
 })();
+

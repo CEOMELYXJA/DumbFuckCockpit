@@ -6,13 +6,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="color-scheme" content="dark">
   <link rel="stylesheet" href="./panel.css">
-  <title>QG · Plan de travail</title>
+  <title>DumbFuckCockpit · Widget de bureau</title>
 </head>
 <body>
   <main class="surface">
     <header class="masthead drag-region">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">QG</span><div><p class="eyebrow">COCKPIT DE VIE <span>·</span> WINDOWS</p><h1>Plan de travail</h1></div></div>
-      <div class="window-actions no-drag"><button id="settingsOpen" class="icon-button" type="button" aria-label="Préférences du bureau" title="Préférences">⌘</button><button id="panelClose" class="icon-button close" type="button" aria-label="Fermer le panneau" title="Masquer">×</button></div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">DFC</span><div><p class="eyebrow">DUMBFUCKCOCKPIT <span>·</span> WIDGET WINDOWS</p><h1>Widget de bureau</h1></div></div>
+      <div class="window-actions no-drag"><button id="settingsOpen" class="action-button settings-button" type="button" aria-label="Préférences du widget" title="Réglages du widget">⚙ Réglages</button><button id="panelClose" class="icon-button close" type="button" aria-label="Masquer le panneau" title="Masquer · le widget reste actif">×</button></div>
     </header>
 
     <section class="system-strip" aria-label="État du bureau">
@@ -45,15 +45,16 @@
 
     <section id="settingsPanel" class="settings-panel" hidden aria-labelledby="settingsTitle">
       <div class="section-heading"><div><p class="eyebrow">COUCHE DU BUREAU</p><h2 id="settingsTitle">Préférences d’affichage</h2></div><button id="settingsClose" class="icon-button no-drag" type="button" aria-label="Fermer les préférences">×</button></div>
-      <label class="setting-row"><span><b>Zone visuelle</b><small>La scène reste derrière les icônes.</small></span><select id="settingSide"><option value="right">À droite · colonne habituelle d’icônes libre</option><option value="left">À gauche</option></select></label>
+      <p class="subtle settings-note">La scène animée est le visuel derrière vos icônes. Fermez ce panneau : elle reste sur le bureau.</p>
+      <label class="setting-row"><span><b>Zone visuelle</b><small>Choisissez le côté; la scène reste derrière les icônes.</small></span><select id="settingSide"><option value="right">À droite · colonne habituelle d’icônes libre</option><option value="left">À gauche</option></select></label>
       <label class="setting-row"><span><b>Transparence du champ</b><small>Réglez sa présence sur votre fond d’écran.</small></span><input id="settingOpacity" type="range" min="62" max="96" value="82"></label>
       <label class="setting-row"><span><b>Mouvement</b><small>Rythme mesuré ou animation réduite.</small></span><select id="settingMotion"><option value="measured">Présence animée · 30 images/s</option><option value="reduced">Mouvement réduit · 1 image/s</option></select></label>
-      <label class="setting-row setting-check"><span><b>Scène vivante sur le bureau</b><small>Affiche les univers animés derrière les icônes.</small></span><input id="settingFieldEnabled" type="checkbox" checked></label>
+      <label class="setting-row setting-check"><span><b>Widget transparent sur le bureau</b><small>Affiche les univers derrière les icônes Windows.</small></span><input id="settingFieldEnabled" type="checkbox" checked></label>
       <label class="setting-row setting-check"><span><b>Lancer avec Windows</b><small>Démarrage facultatif; désactivé par défaut.</small></span><input id="settingStartup" type="checkbox"></label>
-      <p class="fine-print">Les tâches sont conservées localement sur cet ordinateur. L’import ajoute les tâches reconnues après aperçu; les données déjà enregistrées restent en place.</p>
+      <p class="fine-print">Le widget et le site web gardent leurs listes séparées. Utilisez Exporter/Importer pour les transférer. L’import affiche un aperçu avant d’ajouter quoi que ce soit.</p>
     </section>
 
-    <footer class="footer"><span>FICHIERS LOCAUX · AUCUNE SYNCHRONISATION DISTANTE</span><button id="openWeb" type="button">Ouvrir le cockpit web ↗</button></footer>
+    <footer class="footer"><span>LE VISUEL RESTE ACTIF QUAND CE PANNEAU EST FERMÉ</span><button id="openWeb" type="button">Ouvrir le cockpit web ↗</button></footer>
   </main>
 
   <dialog id="importDialog" class="dialog">
@@ -69,3 +70,4 @@
   <script src="./panel.js"></script>
 </body>
 </html>
+

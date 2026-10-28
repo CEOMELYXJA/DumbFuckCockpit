@@ -25,6 +25,10 @@ const sendToParent = (message) => {
   if (process.connected) process.send(message);
 };
 
+function reportStatus(status, message) {
+  sendToParent({ type: "status", payload: { status, message } });
+}
+
 function readHosts() {
   if (!nativeHost) return [];
   try { return nativeHost.enumerateDesktopHosts(); }
@@ -66,6 +70,7 @@ function broadcastActivity(active) {
 }
 
 function notifyUnavailable(message) {
+  reportStatus("unavailable", message);
   const now = Date.now();
   if (now - lastUnavailableNotice < 900_000) return;
   lastUnavailableNotice = now;
@@ -95,7 +100,9 @@ function createScene(display, desktopHost) {
       window.showInactive();
       window.webContents.send("qg:scene-state", { categories: snapshot.categories, tasks: snapshot.tasks, settings: snapshot.settings });
       window.webContents.send("qg:ambient-active", false);
+      reportStatus("visible", "Widget transparent actif derrière les icônes.");
     } catch (error) {
+      reportStatus("unavailable", "Windows n’a pas pu afficher le widget derrière les icônes.");
       sendToParent({ type: "attach-error", message: error.message });
       window.destroy();
     }
@@ -107,7 +114,9 @@ function createScene(display, desktopHost) {
 function rebuildScenes() {
   for (const window of scenes) if (!window.isDestroyed()) window.destroy();
   scenes = [];
-  if (!receivedSnapshot || snapshot.settings?.fieldEnabled === false) return;
+  if (!receivedSnapshot) return;
+  if (snapshot.settings?.fieldEnabled === false) { reportStatus("hidden", "Widget transparent masqué dans les préférences."); return; }
+  reportStatus("starting", "Recherche de la couche arrière du bureau Windows…");
   cachedHosts = readHosts();
   lastShellScan = Date.now();
   const hosts = cachedHosts;
@@ -121,6 +130,7 @@ function rebuildScenes() {
     if (host) { createScene(display, host); created++; }
   }
   if (!created) notifyUnavailable("Aucune surface de fond Windows compatible n’a été trouvée.");
+  else reportStatus("starting", "Installation du widget derrière les icônes…");
 }
 
 function checkShell() {
@@ -179,3 +189,4 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => { if (shuttingDown) app.quit(); });
+

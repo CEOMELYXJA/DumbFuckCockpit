@@ -9,18 +9,18 @@ const { spawn } = require("node:child_process");
 if (process.argv.includes("--qg-ambient-host")) {
   require("./ambient.cjs");
 } else if (process.platform !== "win32") {
-  app.whenReady().then(() => dialog.showErrorBox("QG Desktop", "Le prototype du widget de bureau cible Windows 10 et Windows 11."));
+  app.whenReady().then(() => dialog.showErrorBox("DumbFuckCockpit Widget", "Le widget transparent cible Windows 10 et Windows 11."));
 } else {
   const singleInstance = app.requestSingleInstanceLock();
   if (!singleInstance) app.quit();
   else {
   app.on("second-instance", () => { if (appReady) openPanel(); else secondInstancePending = true; });
   const CATEGORIES = [
-    ["tat", "Boutique", "#fa759e"], ["ate", "Atelier 3D", "#9bd779"], ["dro", "Studio drone", "#58c8dc"],
-    ["gar", "Garage trottinette", "#e9ae62"], ["lab", "Labo code", "#aa9df2"], ["ban", "Banque", "#e9d274"],
-    ["cor", "Corps", "#6ed8c5"], ["mai", "Maison connectée", "#ef9d69"], ["cry", "Crypto", "#d8c76a"],
-    ["vr", "VR et AR", "#c0a0eb"], ["arc", "Arcade", "#eb7985"], ["soc", "Contenu et réseaux", "#74bde3"],
-    ["app", "Design visuel", "#dc87be"]
+    ["tat", "Boutique", "#b77f83"], ["ate", "Atelier 3D", "#8e9d7b"], ["dro", "Studio drone", "#77979a"],
+    ["gar", "Garage trottinette", "#b38c63"], ["lab", "Labo code", "#9586a6"], ["ban", "Banque", "#b8a477"],
+    ["cor", "Corps", "#78a398"], ["mai", "Maison connectée", "#ad8068"], ["cry", "Crypto", "#a39870"],
+    ["vr", "VR et AR", "#9685a3"], ["arc", "Arcade", "#b47a7d"], ["soc", "Contenu et réseaux", "#7992a1"],
+    ["app", "Design visuel", "#a87d98"]
   ];
   const categoryIds = new Set(CATEGORIES.map(([id]) => id));
   const durations = new Set([5, 15, 30, 60, 90]);
@@ -30,6 +30,7 @@ if (process.argv.includes("--qg-ambient-host")) {
   let panel = null;
   let ambientProcess = null;
   let ambientRestartTimer = null;
+  let ambientStatus = { status: "starting", message: "Démarrage du widget transparent…" };
   let tasksPath = "";
   let settingsPath = "";
   let tasks = [];
@@ -116,6 +117,11 @@ if (process.argv.includes("--qg-ambient-host")) {
     return { categories: CATEGORIES, tasks: publicTasks(), settings };
   }
 
+  function setAmbientStatus(status, message) {
+    ambientStatus = { status, message };
+    if (panel && !panel.isDestroyed() && !panel.webContents.isLoading()) panel.webContents.send("qg:ambient:status", ambientStatus);
+  }
+
   function sendAmbient(type, payload) {
     if (!ambientProcess || !ambientProcess.connected) return false;
     try { ambientProcess.send({ type, payload }); return true; }
@@ -133,6 +139,7 @@ if (process.argv.includes("--qg-ambient-host")) {
       ambientProcess.kill();
       ambientProcess = null;
     }
+    setAmbientStatus("starting", "Démarrage du widget transparent…");
     const profile = path.join(app.getPath("temp"), `QG-Desktop-Ambient-${process.pid}`);
     const args = app.isPackaged ? ["--qg-ambient-host"] : [path.resolve(__dirname, ".."), "--qg-ambient-host"];
     let child;
@@ -143,19 +150,25 @@ if (process.argv.includes("--qg-ambient-host")) {
         env: { ...process.env, QG_AMBIENT_PROFILE: profile }
       });
     } catch (error) {
+      setAmbientStatus("unavailable", "Le widget n’a pas pu démarrer.");
       showShellNotice(`La couche de fond n’a pas démarré : ${error.message}`);
       return;
     }
     ambientProcess = child;
     child.on("message", (message) => {
       if (!message || typeof message !== "object") return;
-      if (message.type === "shell-unavailable" || message.type === "attach-error" || message.type === "shell-error") showShellNotice(message.message || "La couche de fond Windows reste masquée pour protéger vos icônes.");
+      if (message.type === "status" && message.payload) setAmbientStatus(message.payload.status, message.payload.message);
+      if (message.type === "shell-unavailable" || message.type === "attach-error" || message.type === "shell-error") {
+        setAmbientStatus("unavailable", message.message || "La couche Windows reste masquée pour protéger vos icônes.");
+        showShellNotice(message.message || "La couche de fond Windows reste masquée pour protéger vos icônes.");
+      }
       if (message.type === "ready") sendAmbient("snapshot", ambientSnapshot());
     });
-    child.on("error", (error) => showShellNotice(`La couche de fond s’est arrêtée : ${error.message}`));
+    child.on("error", (error) => { setAmbientStatus("unavailable", "Le widget transparent s’est arrêté."); showShellNotice(`La couche de fond s’est arrêtée : ${error.message}`); });
     child.on("close", () => {
       if (ambientProcess === child) ambientProcess = null;
       if (quitting || !settings.fieldEnabled) return;
+      setAmbientStatus("starting", "Redémarrage du widget transparent…");
       showShellNotice("La couche de fond redémarre; le plan de travail reste disponible.");
       ambientRestartTimer = setTimeout(() => { ambientRestartTimer = null; startAmbientHost(); }, 2200);
       ambientRestartTimer.unref?.();
@@ -164,6 +177,7 @@ if (process.argv.includes("--qg-ambient-host")) {
   }
 
   function stopAmbientHost() {
+    setAmbientStatus("hidden", "Le widget transparent est masqué.");
     if (!ambientProcess) return;
     const child = ambientProcess;
     ambientProcess = null;
@@ -178,7 +192,7 @@ if (process.argv.includes("--qg-ambient-host")) {
     const now = Date.now();
     if (now - (lastNotices.get(body) || 0) < 900_000) return;
     lastNotices.set(body, now);
-    tray.displayBalloon({ title: "QG Desktop", content: body, iconType: "info" });
+    tray.displayBalloon({ title: "DumbFuckCockpit Widget", content: body, iconType: "info" });
   }
 
   function publicTasks() {
@@ -214,11 +228,20 @@ if (process.argv.includes("--qg-ambient-host")) {
   }
 
   function openPanel() {
+    const showPreferences = arguments[0] === true;
     if (!panel || panel.isDestroyed()) createPanel();
+    const target = panel;
     placePanel();
-    panel.show();
-    panel.focus();
-    panel.webContents.send("qg:tasks:snapshot", { tasks: publicTasks(), summary: taskSummary(), blocked: tasksRecoveryNeeded });
+    target.show();
+    target.focus();
+    const sendPanelState = () => {
+      if (!target || target.isDestroyed()) return;
+      target.webContents.send("qg:tasks:snapshot", { tasks: publicTasks(), summary: taskSummary(), blocked: tasksRecoveryNeeded });
+      target.webContents.send("qg:ambient:status", ambientStatus);
+      if (showPreferences) target.webContents.send("qg:settings:open");
+    };
+    if (target.webContents.isLoading()) target.webContents.once("did-finish-load", sendPanelState);
+    else sendPanelState();
   }
 
   function createPanel() {
@@ -268,7 +291,7 @@ if (process.argv.includes("--qg-ambient-host")) {
       const result = await dialog.showOpenDialog(panel, {
         title: "Importer une liste sans la réécrire",
         properties: ["openFile"],
-        filters: [{ name: "Tâches QG", extensions: ["txt", "md", "markdown", "json"] }]
+        filters: [{ name: "Tâches DumbFuckCockpit", extensions: ["txt", "md", "markdown", "json"] }]
       });
       if (result.canceled || !result.filePaths[0]) return null;
       const selected = result.filePaths[0];
@@ -279,15 +302,16 @@ if (process.argv.includes("--qg-ambient-host")) {
     ipcMain.handle("qg:tasks:export", async (_event, next) => {
       const safe = cleanTaskList(next);
       const result = await dialog.showSaveDialog(panel, {
-        title: "Exporter une copie de vos tâches QG",
-        defaultPath: "QG-taches.json",
-        filters: [{ name: "Sauvegarde de tâches QG", extensions: ["json"] }]
+        title: "Exporter une copie de vos tâches DumbFuckCockpit",
+        defaultPath: "DumbFuckCockpit-taches.json",
+        filters: [{ name: "Sauvegarde de tâches DumbFuckCockpit", extensions: ["json"] }]
       });
       if (result.canceled || !result.filePath) return { canceled: true };
       await atomicWrite(result.filePath, JSON.stringify({ format: "qg-personal-tasks", version: 2, tasks: safe }, null, 2));
       return { ok: true, fileName: path.basename(result.filePath) };
     });
     ipcMain.handle("qg:settings:read", () => settings);
+    ipcMain.handle("qg:ambient:status", () => ambientStatus);
     ipcMain.handle("qg:settings:save", async (_event, next) => {
       const previous = settings;
       settings = cleanSettings({ ...settings, ...next });
@@ -304,13 +328,14 @@ if (process.argv.includes("--qg-ambient-host")) {
 
   function trayMenu() {
     const menu = Menu.buildFromTemplate([
-      { label: "Ouvrir le plan de travail", click: openPanel },
-      { label: settings.fieldEnabled ? "Masquer la scène du bureau" : "Afficher la scène du bureau", click: toggleAmbientField },
-      { label: "Actualiser la couche du bureau", enabled: settings.fieldEnabled, click: requestAmbientRebuild },
+      { label: "Ouvrir DumbFuckCockpit", click: openPanel },
+      { label: "Réglages du widget", click: () => openPanel(true) },
+      { label: settings.fieldEnabled ? "Masquer le widget transparent" : "Afficher le widget transparent", click: toggleAmbientField },
+      { label: "Recréer le widget du bureau", enabled: settings.fieldEnabled, click: requestAmbientRebuild },
       { type: "separator" },
       { label: "Ouvrir le cockpit web", click: () => shell.openExternal("https://ceomelyxja.github.io/DumbFuckCockpit/") },
       { type: "separator" },
-      { label: "Quitter QG Desktop", click: () => { quitting = true; app.quit(); } }
+      { label: "Quitter DumbFuckCockpit Widget", click: () => { quitting = true; app.quit(); } }
     ]);
     if (tray) tray.setContextMenu(menu);
   }
@@ -331,7 +356,7 @@ if (process.argv.includes("--qg-ambient-host")) {
 
   function createTray() {
     tray = new Tray(nativeImage.createFromPath(path.join(__dirname, "../assets/tray.png")));
-    tray.setToolTip("QG Desktop · Ctrl+Alt+Space");
+    tray.setToolTip("DumbFuckCockpit Widget · Ctrl+Alt+Espace");
     tray.on("double-click", openPanel);
     trayMenu();
   }
@@ -354,7 +379,7 @@ if (process.argv.includes("--qg-ambient-host")) {
         showShellNotice("Une copie locale précédente a été reprise; le fichier original reste conservé.");
       } catch (_) {
         tasksRecoveryNeeded = true;
-        showShellNotice("Le fichier de tâches ne peut pas être lu. QG Desktop le conserve sans l’écraser.");
+        showShellNotice("Le fichier de tâches ne peut pas être lu. DumbFuckCockpit le conserve sans l’écraser.");
         tasks = [];
       }
     }
@@ -363,12 +388,13 @@ if (process.argv.includes("--qg-ambient-host")) {
     app.setLoginItemSettings({ openAtLogin: settings.startWithWindows });
     await configureIpc();
     createTray();
-    startAmbientHost();
+    if (settings.fieldEnabled) startAmbientHost(); else setAmbientStatus("hidden", "Widget transparent désactivé dans les préférences.");
     if (!globalShortcut.register("Control+Alt+Space", openPanel)) showShellNotice("Le raccourci Ctrl+Alt+Espace est déjà utilisé par une autre application.");
     globalShortcut.register("Control+Alt+Shift+Space", requestAmbientRebuild);
     app.on("activate", openPanel);
     appReady = true;
     if (secondInstancePending) openPanel();
+    else openPanel(true);
   });
 
   app.on("before-quit", () => {
@@ -389,3 +415,4 @@ if (process.argv.includes("--qg-ambient-host")) {
   });
   }
 }
+

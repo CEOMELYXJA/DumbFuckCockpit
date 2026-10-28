@@ -10,8 +10,9 @@ const size = 256;
 const scale = size / 64;
 const rgba = Buffer.alloc(size * size * 4);
 const glyphs = {
-  Q: ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
-  G: ["01110", "10001", "10000", "10111", "10001", "10001", "01110"]
+  D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  F: ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+  C: ["01111", "10000", "10000", "10000", "10000", "10000", "01111"]
 };
 
 function roundedDistance(x, y, left, top, right, bottom, radius) {
@@ -45,20 +46,20 @@ for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
   const px = (x + 0.5) / scale, py = (y + 0.5) / scale;
   const outer = roundedDistance(px, py, 4, 4, 60, 60, 15);
   const fill = coverage((sx, sy) => roundedDistance(sx, sy, 4, 4, 60, 60, 15) <= 0, x, y);
-  paint(x, y, [11, 20, 34], fill);
+  paint(x, y, [11, 14, 16], fill);
   const border = coverage((sx, sy) => { const d = roundedDistance(sx, sy, 4, 4, 60, 60, 15); return d <= 0 && d >= -1.3; }, x, y);
-  paint(x, y, [112, 216, 223], border * 0.84);
+  paint(x, y, [145, 132, 107], border * 0.78);
   const ellipse = Math.abs(Math.hypot((px - 32) / 16, (py - 30) / 12) - 1);
-  if (ellipse < 0.055) paint(x, y, [137, 219, 211], coverage((sx, sy) => Math.abs(Math.hypot((sx - 32) / 16, (sy - 30) / 12) - 1) < 0.055, x, y) * 0.85);
+  if (ellipse < 0.055) paint(x, y, [124, 147, 140], coverage((sx, sy) => Math.abs(Math.hypot((sx - 32) / 16, (sy - 30) / 12) - 1) < 0.055, x, y) * 0.72);
   const diagonalX = 32 + (py - 15) * 0.64;
-  if (py >= 15 && py <= 37 && Math.abs(px - diagonalX) < 1.05) paint(x, y, [228, 239, 237], coverage((sx, sy) => Math.abs(sx - (32 + (sy - 15) * 0.64)) < 1.05 && sy >= 15 && sy <= 37, x, y));
+  if (py >= 15 && py <= 37 && Math.abs(px - diagonalX) < 1.05) paint(x, y, [228, 221, 205], coverage((sx, sy) => Math.abs(sx - (32 + (sy - 15) * 0.64)) < 1.05 && sy >= 15 && sy <= 37, x, y));
   const dot = Math.hypot(px - 49, py - 16);
-  if (dot < 2.4) paint(x, y, [231, 178, 120], coverage((sx, sy) => Math.hypot(sx - 49, sy - 16) < 2.4, x, y));
-  for (const [letter, left] of [["Q", 17], ["G", 34]]) {
-    const gx = Math.floor((px - left) / 2.7), gy = Math.floor((py - 38) / 2.7);
+  if (dot < 2.4) paint(x, y, [185, 154, 111], coverage((sx, sy) => Math.hypot(sx - 49, sy - 16) < 2.4, x, y));
+  for (const [letter, left] of [["D", 13], ["F", 26], ["C", 39]]) {
+    const gx = Math.floor((px - left) / 2.35), gy = Math.floor((py - 40) / 2.35);
     if (gx >= 0 && gx < 5 && gy >= 0 && gy < 7 && glyphs[letter][gy][gx] === "1") {
-      paint(x, y, [225, 239, 238], coverage((sx, sy) => {
-        const bx = Math.floor((sx - left) / 2.7), by = Math.floor((sy - 38) / 2.7);
+      paint(x, y, [225, 221, 211], coverage((sx, sy) => {
+        const bx = Math.floor((sx - left) / 2.35), by = Math.floor((sy - 40) / 2.35);
         return bx >= 0 && bx < 5 && by >= 0 && by < 7 && glyphs[letter][by][bx] === "1";
       }, x, y));
     }
@@ -94,3 +95,4 @@ iconHeader.writeUInt16LE(0, 0); iconHeader.writeUInt16LE(1, 2); iconHeader.write
 iconHeader[6] = size === 256 ? 0 : size; iconHeader[7] = size === 256 ? 0 : size; iconHeader[8] = 0; iconHeader[9] = 0;
 iconHeader.writeUInt16LE(1, 10); iconHeader.writeUInt16LE(32, 12); iconHeader.writeUInt32LE(png.length, 14); iconHeader.writeUInt32LE(22, 18);
 fs.writeFileSync(path.join(output, "qg.ico"), Buffer.concat([iconHeader, png]));
+

@@ -1,4 +1,4 @@
-# QG – Cockpit de vie
+# DumbFuckCockpit — cockpit de vie
 
 Cockpit spatial animé, servi comme site statique par GitHub Pages.
 
@@ -13,6 +13,7 @@ Le site fonctionne sans compilation. Le service worker vérifie le réseau avant
 
 ## Application Windows
 
-**[Télécharger QG Desktop pour Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest)** — la scène transparente est placée derrière les icônes; elle ne bloque pas leurs clics. `Ctrl+Alt+Espace` ouvre le plan de travail. Le mouvement et l’affichage du champ se règlent depuis les préférences ou l’icône QG dans la zone de notification.
+**[Télécharger le widget transparent DumbFuckCockpit pour Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest)** — le programme ouvre son panneau de réglages, place la scène derrière les icônes et ne bloque pas leurs clics. L’accès aux préférences est le bouton « ⚙ Réglages »; `Ctrl+Alt+Espace` est un raccourci secondaire.
 
 L’application et le site gardent des sauvegardes séparées. Les tâches se déplacent par export et import JSON; le navigateur n’est jamais lu directement par l’application.
+

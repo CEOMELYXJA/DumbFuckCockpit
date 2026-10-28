@@ -1,4 +1,4 @@
-name: QG Desktop package
+name: DumbFuckCockpit Widget package
 
 on:
   workflow_dispatch:
@@ -37,7 +37,7 @@ jobs:
       - name: Upload the Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: QG-Desktop-Windows
+          name: DumbFuckCockpit-Widget-Windows
           path: desktop/dist/*.exe
           if-no-files-found: error
           retention-days: 30
@@ -55,7 +55,7 @@ jobs:
       - name: Download installer
         uses: actions/download-artifact@v4
         with:
-          name: QG-Desktop-Windows
+          name: DumbFuckCockpit-Widget-Windows
           path: release
 
       - name: Publish permanent Windows download
@@ -64,13 +64,14 @@ jobs:
         shell: pwsh
         run: |
           $version = node -p "require('./desktop/package.json').version"
-          $tag = "qg-desktop-v$version"
-          $installer = Get-ChildItem "release/QG-Desktop-$version-*.exe" | Select-Object -First 1
+          $tag = "dumbfuckcockpit-widget-v$version"
+          $installer = Get-ChildItem "release/DumbFuckCockpit-Widget-$version-*.exe" | Select-Object -First 1
           if (-not $installer) { throw "Installateur Windows introuvable pour la version $version." }
           & gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null
           if ($LASTEXITCODE -eq 0) {
             & gh release upload $tag $installer.FullName --repo $env:GITHUB_REPOSITORY --clobber
           } else {
-            & gh release create $tag $installer.FullName --repo $env:GITHUB_REPOSITORY --title "QG Desktop $version" --notes-file desktop/RELEASE_NOTES.md --latest
+            & gh release create $tag $installer.FullName --repo $env:GITHUB_REPOSITORY --title "DumbFuckCockpit Widget $version" --notes-file desktop/RELEASE_NOTES.md --latest
           }
           if ($LASTEXITCODE -ne 0) { throw "Publication de la version Windows échouée." }
+
