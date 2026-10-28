@@ -11,6 +11,8 @@ if (process.argv.includes("--qg-ambient-host")) {
 } else if (process.platform !== "win32") {
   app.whenReady().then(() => dialog.showErrorBox("DumbFuckCockpit Widget", "Le widget transparent cible Windows 10 et Windows 11."));
 } else {
+  // Keep the original QG Desktop data folder across the DumbFuckCockpit rebrand.
+  app.setPath("userData", path.join(app.getPath("appData"), "QG Desktop"));
   const singleInstance = app.requestSingleInstanceLock();
   if (!singleInstance) app.quit();
   else {

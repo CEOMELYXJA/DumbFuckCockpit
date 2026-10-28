@@ -1,6 +1,6 @@
 # DumbFuckCockpit Widget — scène transparente Windows
 
-DumbFuckCockpit Widget ajoute une scène spatiale animée et transparente directement au bureau Windows. Elle reste derrière les icônes et laisse leurs clics intacts. Au lancement manuel du programme, le panneau de réglages s’ouvre pour montrer que l’application a bien démarré.
+DumbFuckCockpit Widget ajoute une scène spatiale animée et transparente directement au bureau Windows. Elle reste derrière les icônes et laisse leurs clics intacts. Au lancement manuel du programme, le panneau de réglages s’ouvre pour montrer que l’application a bien démarré. La version 0.3.1 garde le même dossier de tâches que l’ancienne application QG Desktop.
 
 ## La règle d’interface
 
