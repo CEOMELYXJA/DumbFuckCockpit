@@ -33,10 +33,10 @@ jobs:
         working-directory: desktop
         run: npm run package
 
-      - name: Upload Windows downloads
+      - name: Upload the Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: QG-Desktop-Windows
-          path: desktop/dist/*
+          path: desktop/dist/*.exe
           if-no-files-found: error
           retention-days: 30

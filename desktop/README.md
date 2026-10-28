@@ -34,7 +34,7 @@ L’application cible Windows 10 et 11. Le lancement avec Windows reste désacti
 
 ## Paquet Windows
 
-La tâche GitHub Actions `QG Desktop package` produit un installateur NSIS et une archive ZIP de l’application portable. Le paquet de ce prototype n’est pas signé; Windows peut afficher l’avertissement habituel pour un éditeur non vérifié. Aucun programme n’est installé tant que l’utilisateur ne lance pas l’installateur.
+La tâche GitHub Actions `QG Desktop package` produit un installateur NSIS Windows. La compilation ne dépose que ce livrable dans les téléchargements et conserve l’artefact 30 jours. Le paquet de ce prototype n’est pas signé; Windows peut afficher l’avertissement habituel pour un éditeur non vérifié. Aucun programme n’est installé tant que l’utilisateur ne lance pas l’installateur.
 
 ## Limites à résoudre avant diffusion
 
