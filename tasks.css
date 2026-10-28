@@ -1,8 +1,9 @@
 #qgToolsRoot{position:fixed;inset:0;z-index:12;pointer-events:none;color:#e5e0d5;font:14px/1.35 'Saira Condensed',Bahnschrift,'Arial Narrow',sans-serif;letter-spacing:.01em}
 #qgToolbar{position:absolute;left:12px;top:calc(36px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;gap:7px;max-width:calc(100vw - 72px);pointer-events:auto}
-#qgToolbar>button{padding:7px 11px;border:1px solid #454a48;border-radius:9px;background:rgba(7,11,21,.94);color:#e5e0d5;box-shadow:0 4px 18px #0008;backdrop-filter:blur(10px);font:inherit;white-space:nowrap;cursor:pointer}
+#qgToolbar>button,#qgToolbar>a{padding:7px 11px;border:1px solid #454a48;border-radius:9px;background:rgba(7,11,21,.94);color:#e5e0d5;box-shadow:0 4px 18px #0008;backdrop-filter:blur(10px);font:inherit;white-space:nowrap;cursor:pointer}
+#qgToolbar>a{text-decoration:none;border-color:#8e9d7b;color:#c6d0bb}
 #qgToolbar>button:first-child{border-color:#77979a;color:#b2c4c3}
-#qgToolbar>button:focus-visible,#qgTaskManager button:focus-visible,#qgTaskManager input:focus-visible,#qgTaskManager select:focus-visible,#qgTaskManager textarea:focus-visible,#qgTaskManager summary:focus-visible{outline:2px solid #b38c63;outline-offset:2px}
+#qgToolbar>button:focus-visible,#qgToolbar>a:focus-visible,#qgTaskManager button:focus-visible,#qgTaskManager input:focus-visible,#qgTaskManager select:focus-visible,#qgTaskManager textarea:focus-visible,#qgTaskManager summary:focus-visible{outline:2px solid #b38c63;outline-offset:2px}
 #qgInstallHint{position:absolute;left:0;top:46px;display:flex;gap:12px;align-items:flex-start;width:min(360px,calc(100vw - 28px));padding:12px;border:1px solid #77979a;border-radius:12px;background:#11161b;color:#e5e0d5;box-shadow:0 14px 30px #000c;line-height:1.45}
 #qgInstallHint[hidden]{display:none}
 #qgInstallHint button{margin-left:auto;padding:3px 7px;flex:none}
@@ -53,5 +54,5 @@
 .qg-task-origin{color:#96948b;font-size:11px}
 .qg-empty{padding:18px;border:1px dashed #454a48;border-radius:13px;color:#b6b1a5;text-align:center;line-height:1.5}
 .qg-feedback{min-height:1em;margin:8px 0 0;color:#b8c3bd}
-@media(max-width:680px){#qgTaskShade{padding:7px}#qgTaskManager{max-height:calc(100dvh - 14px);border-radius:15px}.qg-task-fields{grid-template-columns:1fr 1fr}.qg-task-fields label:first-child{grid-column:1/-1}.qg-add{align-items:stretch}.qg-add button{align-self:stretch}.qg-head h2{font-size:22px}#qgToolbar{left:8px;top:calc(34px + env(safe-area-inset-top,0px))}#qgToolbar>button{padding:6px 8px;font-size:12px}}
+@media(max-width:680px){#qgTaskShade{padding:7px}#qgTaskManager{max-height:calc(100dvh - 14px);border-radius:15px}.qg-task-fields{grid-template-columns:1fr 1fr}.qg-task-fields label:first-child{grid-column:1/-1}.qg-add{align-items:stretch}.qg-add button{align-self:stretch}.qg-head h2{font-size:22px}#qgToolbar{left:8px;top:calc(34px + env(safe-area-inset-top,0px))}#qgToolbar>button,#qgToolbar>a{padding:6px 8px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){#qgTaskManager *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}

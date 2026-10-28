@@ -2,18 +2,32 @@
 
 Cockpit spatial animé, servi comme site statique par GitHub Pages.
 
-- **Carte :** le rendu, les contrôles de zoom et les menus d’univers restent dans leur script original.
-- **Tâches :** le bouton « Mes tâches » ouvre un panneau indépendant pour ajouter, classer, prioriser, estimer et suivre des tâches. Les fichiers .txt et .md s’importent avec un aperçu; une copie .json peut être exportée ou restaurée.
-- **Classement :** les catégories reconnues par titre de section sont proposées à l’import. Toute section inconnue reste « À trier »; rien n’est deviné.
-- **Conservation :** le gestionnaire utilise sa propre clé locale qg-personal-tasks-v2. Il ne remplace pas la progression sauvegardée sous qg-v3. Les tâches de l’essai précédent sont copiées automatiquement si aucune nouvelle sauvegarde n’existe; l’ancienne valeur reste intacte.
-- **Installation :** ouvrez le site dans Microsoft Edge et choisissez **Applications → Installer ce site comme une application**. Après la première visite, les fichiers de l’application restent disponibles hors ligne.
-- **Limite :** les données restent dans le navigateur et ne sont pas synchronisées entre appareils. Exportez une copie .json pour la déplacer.
+## Quelle version ouvrir ?
 
-Le site fonctionne sans compilation. Le service worker vérifie le réseau avant d’utiliser sa copie hors ligne pour que les changements publiés soient chargés rapidement.
+- **Le site web** est la version complète et interactive. Utilisez-le pour ouvrir les menus, gérer vos tâches et voir les mises à jour du site.
+- **Le widget Windows** affiche le visuel animé sur le bureau, derrière les icônes. Il laisse passer les clics; les menus et les tâches du site ne sont pas utilisables dans cette couche.
+- Pour voir le widget, lancez le widget et fermez la fenêtre du site. Vous n’avez pas besoin d’ouvrir les deux en même temps.
+- Les deux utilisent les visuels du même projet; les tâches sauvegardées dans le site ne sont pas copiées dans le widget.
 
-## Application Windows
+## Installer le widget Windows
 
-**[Télécharger le widget transparent DumbFuckCockpit pour Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest)** — il affiche la carte 3D originale et les treize univers du cockpit derrière les icônes. Le panneau ne sert qu’à régler le côté, la transparence et le mouvement; aucun JSON n’est requis pour afficher le widget. `Ctrl+Alt+Espace` ou le raccourci du menu Démarrer rouvre le panneau.
+1. Ouvrez [les téléchargements Windows](https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest) et enregistrez le fichier **DumbFuckCockpit-Widget-…-x64.exe** dans **Téléchargements**.
+2. Double-cliquez le fichier. Il s’installe automatiquement dans le dossier des applications Windows, crée **un seul raccourci** sur le Bureau et démarre le widget.
+3. Fermez la fenêtre du site web pour voir le visuel sur le bureau.
+4. Pour les réglages, double-cliquez de nouveau sur le raccourci du Bureau. Fermer les réglages laisse le widget actif.
 
-Le widget Windows et l’application Chrome utilisent les mêmes fichiers visuels. Chrome garde sa progression dans son propre profil; le widget possède son profil Windows et ne synchronise pas encore les données enregistrées dans Chrome.
+Le fichier téléchargé est l’installateur. Il ne faut pas le décompresser ni choisir un dossier sur le Bureau. L’installation ne crée aucun dossier sur le Bureau; elle y place seulement le raccourci du widget.
+
+## Fonctions du site web
+
+- **Carte :** zoom, déplacement et menus des univers.
+- **Tâches :** ajouter, classer, prioriser, estimer et suivre des tâches; importer des fichiers `.txt` et `.md`; exporter une sauvegarde `.json`.
+- **Classement :** les catégories reconnues sont proposées à l’import; les sections inconnues restent « À trier ».
+- **Conservation :** les tâches du site sont enregistrées dans le navigateur et ne se synchronisent pas entre appareils. Exportez une sauvegarde JSON pour les déplacer.
+
+## Mises à jour
+
+Le widget Windows prend une copie du visuel du site lors de sa publication. Les changements du site ne mettent pas à jour une installation Windows déjà faite; téléchargez la nouvelle version Windows pour actualiser le widget.
+
+Le site fonctionne sans compilation. Il utilise GitHub Pages et un service worker pour son fonctionnement hors ligne.
 

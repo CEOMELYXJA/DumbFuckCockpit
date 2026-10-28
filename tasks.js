@@ -79,7 +79,8 @@
   root.innerHTML =
     '<div id="qgToolbar" aria-label="Outils du cockpit">' +
       '<button id="qgOpenTasks" type="button" aria-haspopup="dialog" aria-controls="qgTaskManager">☷ Mes tâches</button>' +
-      '<button id="qgInstallApp" type="button" aria-describedby="qgInstallHint">⇩ Installer</button>' +
+      '<button id="qgInstallApp" type="button" aria-describedby="qgInstallHint">⇩ Installer le site</button>' +
+      '<a id="qgWidgetDownload" href="https://github.com/CEOMELYXJA/DumbFuckCockpit/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Télécharger le widget transparent Windows">◉ Widget Windows</a>' +
       '<div id="qgInstallHint" role="status" hidden><span></span><button id="qgInstallHintClose" type="button" aria-label="Fermer le conseil">✕</button></div>' +
     '</div>' +
     '<div id="qgTaskShade" hidden>' +
@@ -372,18 +373,18 @@
   byId("qgInstallApp").addEventListener("click", async function () {
     const hint = byId("qgInstallHint"), text = hint.querySelector("span");
     if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
-      text.textContent = "Le QG est déjà ouvert en mode application. Vous pouvez l’épingler depuis Windows.";
+      text.textContent = "Le site web est déjà installé dans le navigateur. Le widget transparent Windows se télécharge avec le bouton « Widget Windows ».";
     } else if (installPrompt) {
       const prompt = installPrompt; installPrompt = null; await prompt.prompt();
       const choice = await prompt.userChoice;
-      text.textContent = choice.outcome === "accepted" ? "Le QG est en cours d’installation." : "Installation annulée. Réessayez depuis le menu du navigateur.";
+      text.textContent = choice.outcome === "accepted" ? "Installation de la version web en cours." : "Installation annulée. Réessayez depuis le menu du navigateur.";
     } else {
-      text.textContent = "Dans Microsoft Edge, ouvrez ⋯ > Applications > Installer ce site comme une application.";
+      text.textContent = "Ce bouton concerne l’installation du site web. Dans Edge, ouvrez ⋯ > Applications > Installer ce site. Pour le widget Windows, utilisez « Widget Windows ».";
     }
     hint.hidden = false;
   });
   window.addEventListener("appinstalled", function () {
-    byId("qgInstallHint").querySelector("span").textContent = "Installation terminée. Vous pouvez lancer le QG depuis Windows.";
+    byId("qgInstallHint").querySelector("span").textContent = "Le site web est installé. Pour le widget transparent Windows, utilisez le bouton « Widget Windows ».";
     byId("qgInstallHint").hidden = false;
   });
 
