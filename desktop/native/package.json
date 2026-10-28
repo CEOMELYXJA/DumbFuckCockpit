@@ -1,0 +1,7 @@
+{
+  "name": "desktop-host",
+  "version": "0.1.0",
+  "private": true,
+  "gypfile": true,
+  "dependencies": { "node-addon-api": "8.5.0" }
+}

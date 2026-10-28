@@ -1,0 +1,42 @@
+name: QG Desktop package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - desktop/orchestrator-layer-prototype-2026-10-28
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-widget.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-package:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Get source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install packages and build the native Windows host
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+
+      - name: Create installer and portable package
+        working-directory: desktop
+        run: npm run package
+
+      - name: Upload Windows downloads
+        uses: actions/upload-artifact@v4
+        with:
+          name: QG-Desktop-Windows
+          path: desktop/dist/*
+          if-no-files-found: error
+          retention-days: 30

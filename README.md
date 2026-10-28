@@ -10,3 +10,7 @@ Cockpit spatial animé, servi comme site statique par GitHub Pages.
 - **Limite :** les données restent dans le navigateur et ne sont pas synchronisées entre appareils. Exportez une copie .json pour la déplacer.
 
 Le site fonctionne sans compilation. Le service worker vérifie le réseau avant d’utiliser sa copie hors ligne pour que les changements publiés soient chargés rapidement.
+
+## Prototype Windows séparé
+
+La branche `desktop/orchestrator-layer-prototype-2026-10-28` contient un prototype d’application de bureau à deux couches : une scène transparente placée derrière les icônes Windows et un plan de travail qui s’ouvre à la demande. Le site publié reste indépendant. Voir [desktop/README.md](desktop/README.md) pour l’architecture, la reprise des tâches et le paquet Windows.
